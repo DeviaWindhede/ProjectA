@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Linq;
-using Newtonsoft.Json;
 
 public interface IPlayerInput
 {
@@ -59,6 +58,12 @@ public class Player : MonoBehaviour, IPlayerInput
   private PlayerInputActions inputHandler;
   private Vector2 inputDirection;
   [SerializeField] private int playerIndex = 0;
+  public int PlayerIndex { get { return this.playerIndex; } }
+  public void SetPlayerIndex(int value) {
+    if (value > 0) {
+      this.playerIndex = value;
+    }
+  }
   [SerializeField] private Transform mesh;
   [SerializeField] private bool useGravity = true;
   [SerializeField, Min(0f)] private float steeringMultiplier = 1f;
@@ -71,6 +76,7 @@ public class Player : MonoBehaviour, IPlayerInput
   [SerializeField] private bool isGrounded = false;
   [SerializeField] private float maxAngle = 45;
   [SerializeField] private float minAngle = -45;
+  [SerializeField] private Transform followVirtualCamera;
 
   Vector3 _forward;
   Vector3 Forward { get { return this._forward; } }
@@ -96,6 +102,7 @@ public class Player : MonoBehaviour, IPlayerInput
     this._verticalRotation = new Quaternion();
     this._horizontalRotation = Quaternion.Euler(0, this.body.rotation.y, 0);
     this._forward = transform.forward;
+    this.followVirtualCamera.gameObject.layer = CameraManager.PLAYER_CAMERA_BASE_LAYER + this.playerIndex;
   }
 
   private void InstantiateInputHandler(PlayerInput _) {
@@ -238,7 +245,9 @@ public class Player : MonoBehaviour, IPlayerInput
   }
 
   private void OnDestroy() {
-    this.inputHandler.Unsubscribe();
+    if (this.inputHandler != null) {
+      this.inputHandler.Unsubscribe();
+    }
   }
 }
 

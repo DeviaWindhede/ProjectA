@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using System.Linq;
+using Newtonsoft.Json;
 
 public interface IPlayerInput
 {
@@ -9,27 +11,44 @@ public interface IPlayerInput
   void InteractCallback(bool value);
 }
 
-public class InputHandler
+public class PlayerInputActions
 {
-  private InputActions inputActions;
+  private InputActionMap inputActions;
+  private IPlayerInput playerInput;
+  private InputAction actionMove;
+  private InputAction actionInteract;
+  public PlayerInputActions(InputActionMap actionMap)
+  {
+    this.inputActions = actionMap;
+    this.actionMove = actionMap.FindAction("Move", true);
+    this.actionInteract = actionMap.FindAction("Interact", true);
+  }
 
   public void Subscribe(IPlayerInput input)
   {
-    this.inputActions = new InputActions();
-    this.inputActions.Gameplay.Move.Enable();
-    this.inputActions.Gameplay.Move.performed += context => input.MoveCallback(context.ReadValue<Vector2>());
-    this.inputActions.Gameplay.Move.canceled += context => input.MoveCallback(context.ReadValue<Vector2>());
+    this.Unsubscribe();
+    this.playerInput = input;
 
-    this.inputActions.Gameplay.Interact.Enable();
-    this.inputActions.Gameplay.Interact.performed += context => input.InteractCallback(context.ReadValue<bool>());
-    this.inputActions.Gameplay.Interact.performed += context => input.InteractCallback(context.ReadValue<bool>());
+    actionMove.Enable();
+    actionMove.performed += context => playerInput.MoveCallback(context.ReadValue<Vector2>());
+    actionMove.canceled += context => playerInput.MoveCallback(context.ReadValue<Vector2>());
+
+    actionInteract.Enable();
+    actionInteract.performed += context => playerInput.InteractCallback(context.ReadValue<bool>());
   }
 
   public void Unsubscribe()
   {
-    this.inputActions.Gameplay.Move.Disable();
-    this.inputActions.Gameplay.Interact.Disable();
-    this.inputActions = null;
+    if (this.playerInput != null) {
+      actionMove.performed -= context => playerInput.MoveCallback(context.ReadValue<Vector2>());
+      actionMove.canceled -= context => playerInput.MoveCallback(context.ReadValue<Vector2>());
+      actionMove.Disable();
+
+      actionInteract.performed -= context => playerInput.InteractCallback(context.ReadValue<bool>());
+      actionInteract.Disable();
+
+      this.playerInput = null;
+    }
   }
 }
 
@@ -37,9 +56,9 @@ public class InputHandler
 public class Player : MonoBehaviour, IPlayerInput
 {
   private Rigidbody body;
-  private InputHandler inputHandler;
+  private PlayerInputActions inputHandler;
   private Vector2 inputDirection;
-
+  [SerializeField] private int playerIndex = 0;
   [SerializeField] private Transform mesh;
   [SerializeField] private bool useGravity = true;
   [SerializeField, Min(0f)] private float steeringMultiplier = 1f;
@@ -61,20 +80,35 @@ public class Player : MonoBehaviour, IPlayerInput
   public Quaternion Rotation { get { return this._finalRotation; } }
 
   // Start is called before the first frame update
-  void Awake()
+  void Start()
   {
     this.body = gameObject.GetComponent<Rigidbody>();
     this.inputDirection = new Vector2();
-    this.inputHandler = new InputHandler();
 
-    this.inputHandler.Subscribe(this);
+    var inputManager = GameObject.Find("InputManager").GetComponent<InputManager>();
+    var playerInput = inputManager.GetPlayerInput(this.playerIndex);
+
+    if (playerInput)
+      this.InstantiateInputHandler(playerInput);
+    else
+      inputManager.onJoin += ctx => InstantiateInputHandler(ctx);
 
     this._verticalRotation = new Quaternion();
     this._horizontalRotation = Quaternion.Euler(0, this.body.rotation.y, 0);
     this._forward = transform.forward;
+  }
 
-    PlayerInput i = GetComponent<PlayerInput>();
-    // i.actionEvents[0].
+  private void InstantiateInputHandler(PlayerInput _) {
+    var inputManager = GameObject.Find("InputManager").GetComponent<InputManager>();
+    var playerInput = inputManager.GetPlayerInput(this.playerIndex);
+    if (playerInput) {
+      var gameplayMap = playerInput.actions.actionMaps.ToArray().First(m => m.name == InputManager.GAMEPLAY_MAPPING_NAME);
+      if (gameplayMap != null) {
+        this.inputHandler = new PlayerInputActions(gameplayMap);
+        this.inputHandler.Subscribe(this);
+        inputManager.onJoin -= ctx => InstantiateInputHandler(ctx);
+      }
+    }
   }
 
 

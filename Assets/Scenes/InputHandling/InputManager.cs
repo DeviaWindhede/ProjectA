@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using System.Linq;
 
 public struct Input
 {
@@ -18,8 +19,12 @@ public struct Input
 [RequireComponent(typeof(PlayerInputManager))]
 public class InputManager : MonoBehaviour
 {
+    public const string GAMEPLAY_MAPPING_NAME = "Gameplay";
+    public event System.Action<PlayerInput> onJoin;
+
     private List<Input> inputs;
     private PlayerInputManager manager;
+
 
     private void Awake()
     {
@@ -37,18 +42,17 @@ public class InputManager : MonoBehaviour
 
         var inputObj = new Input(this.inputs.Count, input);
         this.inputs.Add(inputObj);
+        this.onJoin.Invoke(input);
     }
 
     public void OnPlayerLeft(PlayerInput input)
     {
-        print(
-            "Player " + this.inputs.Find(x => x.playerInput == input).index + " has disconnected"
-        );
+        print("Player " + this.inputs.Find(x => x.playerInput == input).index + " has disconnected");
         // this.inputs.Remove(input);
     }
 
     public PlayerInput GetPlayerInput(int index)
     {
-        return inputs.Find(ctx => ctx.index == index).playerInput ?? null;
+        return inputs.Exists(i => i.index == index) ? inputs.First(i => i.index == index).playerInput : null;
     }
 }

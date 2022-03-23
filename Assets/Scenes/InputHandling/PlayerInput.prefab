@@ -48,7 +48,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Actions: {fileID: -944628639613478452, guid: a63c567757ba6694a81af0e88b6e6dc9,
     type: 3}
-  m_NotificationBehavior: 0
+  m_NotificationBehavior: 3
   m_UIInputModule: {fileID: 0}
   m_DeviceLostEvent:
     m_PersistentCalls:
@@ -59,10 +59,22 @@ MonoBehaviour:
   m_ControlsChangedEvent:
     m_PersistentCalls:
       m_Calls: []
-  m_ActionEvents: []
+  m_ActionEvents:
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 8852fc4f-5012-43cb-af3d-ef3ec10f7c17
+    m_ActionName: Gameplay/Move[/Keyboard/w,/XInputControllerWindows/leftStick/up,/Keyboard/s,/XInputControllerWindows/leftStick/down,/Keyboard/a,/XInputControllerWindows/leftStick/left,/Keyboard/d,/XInputControllerWindows/leftStick/right]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 2c060fbe-16c6-49b2-a06c-e4dec04f0ebc
+    m_ActionName: Gameplay/Interact[/Keyboard/space]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 591dadd3-9341-4e04-9982-6b8b3152298c
+    m_ActionName: Menu/New action
   m_NeverAutoSwitchControlSchemes: 1
   m_DefaultControlScheme: 
-  m_DefaultActionMap: Player
+  m_DefaultActionMap: Gameplay
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 5010561717716275085}
 --- !u!20 &5010561717716275085

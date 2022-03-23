@@ -16,19 +16,19 @@ public class InputHandler
   public void Subscribe(IPlayerInput input)
   {
     this.inputActions = new InputActions();
-    this.inputActions.Player.Move.Enable();
-    this.inputActions.Player.Move.performed += context => input.MoveCallback(context.ReadValue<Vector2>());
-    this.inputActions.Player.Move.canceled += context => input.MoveCallback(context.ReadValue<Vector2>());
+    this.inputActions.Gameplay.Move.Enable();
+    this.inputActions.Gameplay.Move.performed += context => input.MoveCallback(context.ReadValue<Vector2>());
+    this.inputActions.Gameplay.Move.canceled += context => input.MoveCallback(context.ReadValue<Vector2>());
 
-    this.inputActions.Player.Interact.Enable();
-    this.inputActions.Player.Interact.performed += context => input.InteractCallback(context.ReadValue<bool>());
-    this.inputActions.Player.Interact.performed += context => input.InteractCallback(context.ReadValue<bool>());
+    this.inputActions.Gameplay.Interact.Enable();
+    this.inputActions.Gameplay.Interact.performed += context => input.InteractCallback(context.ReadValue<bool>());
+    this.inputActions.Gameplay.Interact.performed += context => input.InteractCallback(context.ReadValue<bool>());
   }
 
   public void Unsubscribe()
   {
-    this.inputActions.Player.Move.Disable();
-    this.inputActions.Player.Interact.Disable();
+    this.inputActions.Gameplay.Move.Disable();
+    this.inputActions.Gameplay.Interact.Disable();
     this.inputActions = null;
   }
 }

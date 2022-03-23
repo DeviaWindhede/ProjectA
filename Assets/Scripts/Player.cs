@@ -1,8 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
-public interface PlayerInput
+public interface IPlayerInput
 {
   void MoveCallback(Vector2 input);
   void InteractCallback(bool value);
@@ -12,7 +13,7 @@ public class InputHandler
 {
   private InputActions inputActions;
 
-  public void Subscribe(PlayerInput input)
+  public void Subscribe(IPlayerInput input)
   {
     this.inputActions = new InputActions();
     this.inputActions.Player.Move.Enable();
@@ -33,7 +34,7 @@ public class InputHandler
 }
 
 [RequireComponent(typeof(Rigidbody))]
-public class Player : MonoBehaviour, PlayerInput
+public class Player : MonoBehaviour, IPlayerInput
 {
   private Rigidbody body;
   private InputHandler inputHandler;
@@ -71,6 +72,9 @@ public class Player : MonoBehaviour, PlayerInput
     this._verticalRotation = new Quaternion();
     this._horizontalRotation = Quaternion.Euler(0, this.body.rotation.y, 0);
     this._forward = transform.forward;
+
+    PlayerInput i = GetComponent<PlayerInput>();
+    // i.actionEvents[0].
   }
 
 

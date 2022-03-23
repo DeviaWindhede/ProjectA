@@ -25,9 +25,12 @@ public class CameraManager : MonoBehaviour
         };
 
         cameras = new List<Camera>();
-        foreach (var go in GameObject.FindObjectsOfType<Player>()) {
+        foreach (Player player in GameObject.FindObjectsOfType<Player>()) {
             GameObject camera = Instantiate(this.playerCameraPrefab, this.transform);
-            camera.layer = PLAYER_CAMERA_BASE_LAYER + go.PlayerIndex;
+            Camera c = camera.GetComponent<Camera>();
+            c.cullingMask = c.cullingMask | 1 << (player.PlayerIndex + PLAYER_CAMERA_BASE_LAYER);
+            camera.layer = PLAYER_CAMERA_BASE_LAYER + player.PlayerIndex;
+            player.GetFollowVirtualCamera.layer = PLAYER_CAMERA_BASE_LAYER + player.PlayerIndex;
             cameras.Add(camera.GetComponent<Camera>());
         }
         for (int i = 0; i < cameras.Count; i++) {

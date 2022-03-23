@@ -152,7 +152,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b5964b66a0c26704e90f20cf56d55931, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerCount: 4
+  playerCount: 2
   spawnPoints:
   - {fileID: 1149366972}
   - {fileID: 1542882550}

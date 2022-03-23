@@ -77,6 +77,7 @@ public class Player : MonoBehaviour, IPlayerInput
   [SerializeField] private float maxAngle = 45;
   [SerializeField] private float minAngle = -45;
   [SerializeField] private Transform followVirtualCamera;
+  public GameObject GetFollowVirtualCamera { get { return this.followVirtualCamera.gameObject; }}
 
   Vector3 _forward;
   Vector3 Forward { get { return this._forward; } }
@@ -86,7 +87,7 @@ public class Player : MonoBehaviour, IPlayerInput
   public Quaternion Rotation { get { return this._finalRotation; } }
 
   // Start is called before the first frame update
-  void Start()
+  void Awake()
   {
     this.body = gameObject.GetComponent<Rigidbody>();
     this.inputDirection = new Vector2();

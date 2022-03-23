@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &8280527753876017317
+--- !u!1 &8836580384736878169
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,8 +8,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 8280527753876017314}
-  - component: {fileID: 8280527753876017321}
+  - component: {fileID: 8836580384736878174}
+  - component: {fileID: 8836580384736878165}
   m_Layer: 0
   m_Name: PlayerInput
   m_TagString: Untagged
@@ -17,13 +17,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &8280527753876017314
+--- !u!4 &8836580384736878174
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8280527753876017317}
+  m_GameObject: {fileID: 8836580384736878169}
   m_LocalRotation: {x: 0.09254138, y: -0.000000004283138, z: 3.980756e-10, w: 0.9957089}
   m_LocalPosition: {x: 4.202826, y: 3.6399999, z: 36.7}
   m_LocalScale: {x: 1, y: 1, z: 1}
@@ -32,13 +32,13 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8280527753876017321
+--- !u!114 &8836580384736878165
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8280527753876017317}
+  m_GameObject: {fileID: 8836580384736878169}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 62899f850307741f2a39c98a8b639597, type: 3}
@@ -57,19 +57,7 @@ MonoBehaviour:
   m_ControlsChangedEvent:
     m_PersistentCalls:
       m_Calls: []
-  m_ActionEvents:
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: 8852fc4f-5012-43cb-af3d-ef3ec10f7c17
-    m_ActionName: Gameplay/Move[/Keyboard/w,/XInputControllerWindows/leftStick/up,/Keyboard/s,/XInputControllerWindows/leftStick/down,/Keyboard/a,/XInputControllerWindows/leftStick/left,/Keyboard/d,/XInputControllerWindows/leftStick/right]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: 2c060fbe-16c6-49b2-a06c-e4dec04f0ebc
-    m_ActionName: Gameplay/Interact[/Keyboard/space]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: 591dadd3-9341-4e04-9982-6b8b3152298c
-    m_ActionName: Menu/New action
+  m_ActionEvents: []
   m_NeverAutoSwitchControlSchemes: 1
   m_DefaultControlScheme: 
   m_DefaultActionMap: Gameplay

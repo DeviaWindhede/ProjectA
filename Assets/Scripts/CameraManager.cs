@@ -29,8 +29,11 @@ public class CameraManager : MonoBehaviour
             GameObject camera = Instantiate(this.playerCameraPrefab, this.transform);
             Camera c = camera.GetComponent<Camera>();
             c.cullingMask = c.cullingMask | 1 << (player.PlayerIndex + PLAYER_CAMERA_BASE_LAYER);
-            camera.layer = PLAYER_CAMERA_BASE_LAYER + player.PlayerIndex;
-            player.GetFollowVirtualCamera.layer = PLAYER_CAMERA_BASE_LAYER + player.PlayerIndex;
+
+            int cullingMask = PLAYER_CAMERA_BASE_LAYER + player.PlayerIndex;
+            camera.layer = cullingMask;
+            player.GetFollowVirtualCamera.layer = cullingMask;
+
             cameras.Add(camera.GetComponent<Camera>());
         }
         for (int i = 0; i < cameras.Count; i++) {

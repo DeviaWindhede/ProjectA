@@ -90,31 +90,34 @@ public class Player : MonoBehaviour, IPlayerInput
   void Awake()
   {
     this.body = gameObject.GetComponent<Rigidbody>();
-    this.inputDirection = new Vector2();
-
-    var inputManager = GameObject.Find("InputManager").GetComponent<InputManager>();
-    var playerInput = inputManager.GetPlayerInput(this.playerIndex);
-
-    if (playerInput)
-      this.InstantiateInputHandler(playerInput);
-    else
-      inputManager.onJoin += ctx => InstantiateInputHandler(ctx);
-
+    this.SetupInputs();
     this._verticalRotation = new Quaternion();
     this._horizontalRotation = Quaternion.Euler(0, this.body.rotation.y, 0);
     this._forward = transform.forward;
-    this.followVirtualCamera.gameObject.layer = CameraManager.PLAYER_CAMERA_BASE_LAYER + this.playerIndex;
+    this._finalRotation = transform.rotation;
+
+    this._horizontalRotation = Quaternion.Euler(Vector3.up * this.transform.rotation.eulerAngles.y);
+    this._verticalRotation.eulerAngles = Quaternion.Euler(this.transform.right).eulerAngles;
   }
 
-  private void InstantiateInputHandler(PlayerInput _) {
-    var inputManager = GameObject.Find("InputManager").GetComponent<InputManager>();
-    var playerInput = inputManager.GetPlayerInput(this.playerIndex);
+  private void SetupInputs() {
+    this.inputDirection = new Vector2();
+    InputManager inputManager = GameObject.Find("InputManager").GetComponent<InputManager>();
+    PlayerInput playerInput = inputManager.GetPlayerInput(this.playerIndex);
+
+    if (playerInput)
+      this.InstantiateInputHandler(playerInput, inputManager);
+    else
+      inputManager.onJoin += ctx => InstantiateInputHandler(ctx, inputManager);
+  }
+
+  private void InstantiateInputHandler(PlayerInput playerInput, InputManager inputManager) {
     if (playerInput) {
-      var gameplayMap = playerInput.actions.actionMaps.ToArray().First(m => m.name == InputManager.GAMEPLAY_MAPPING_NAME);
+      InputActionMap gameplayMap = playerInput.actions.actionMaps.ToArray().First(m => m.name == InputManager.GAMEPLAY_MAPPING_NAME);
       if (gameplayMap != null) {
         this.inputHandler = new PlayerInputActions(gameplayMap);
         this.inputHandler.Subscribe(this);
-        inputManager.onJoin -= ctx => InstantiateInputHandler(ctx);
+        inputManager.onJoin -= ctx => InstantiateInputHandler(ctx, inputManager);
       }
     }
   }
@@ -127,7 +130,19 @@ public class Player : MonoBehaviour, IPlayerInput
   {
     float time = Time.fixedDeltaTime;
 
+    GroundedState(time);
+    FlyingState(time);
 
+    this.body.velocity = this.velocity * time;
+  }
+
+  private void GroundedState(float time) {
+
+  }
+
+  private void FlyingState(float time) {
+
+    #region Comments
     // Vector3 forwardForce = this.transform.forward * forwardSpeed;
     // this.velocity += forwardForce;
 
@@ -172,7 +187,7 @@ public class Player : MonoBehaviour, IPlayerInput
     //   float verticalMagnitude = (this.transform.forward * forwardSpeed + this.velocity).magnitude;
     //   this.velocity.y += this.finalDirection.y * verticalMagnitude;
     // }
-  
+
     // Vector3 forwardForce = Vector3.Lerp(this.velocity, this.finalDirection, turnPercentage);
     // forwardForce.Normalize();
     // this.velocity += this.finalDirection * forwardSpeed;
@@ -182,7 +197,7 @@ public class Player : MonoBehaviour, IPlayerInput
     //   forwardForce.normalized,
     //   Mathf.PI / 2 * this.turnPercentage,
     //   0f).normalized * this.velocity.magnitude;
-
+    #endregion
     HandleRotation(time);
 
     // Horizontal Velocity
@@ -210,7 +225,6 @@ public class Player : MonoBehaviour, IPlayerInput
     {
       this.velocity = Vector3.zero;
     }
-    this.body.velocity = this.velocity * time;
   }
 
   private void HandleRotation(float time) {
@@ -218,7 +232,7 @@ public class Player : MonoBehaviour, IPlayerInput
     Quaternion horizontalDelta = Quaternion.Euler(Vector3.up * this.inputDirection.x * rotationSpeed * time);
     this._horizontalRotation = this._horizontalRotation * horizontalDelta;
 
-    // Verticle Direction Handling (This would probably be easier with proper Quaternion calculations)
+    // Vertical Direction Handling (This would probably be easier with proper Quaternion calculations)
     Vector3 verticalDeltaEuler = Quaternion.Euler(Vector3.right).eulerAngles * this.inputDirection.y * this.rotationSpeed * time;
 
     float verticalAngle = (this._verticalRotation.eulerAngles + verticalDeltaEuler).x % 360;

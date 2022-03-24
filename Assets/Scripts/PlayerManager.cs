@@ -12,14 +12,16 @@ public class PlayerManager : MonoBehaviour
     {
         players = new List<Player>();
         for (int i = 0; i < playerCount; i++) {
-            GameObject go = Instantiate(playerPrefab, this.transform);
-            Player p = go.GetComponent<Player>();
-            p.SetPlayerIndex(i);
+            Vector3 spawnPosition = Vector3.zero;
+            Quaternion spawnRotation = Quaternion.identity;
             if (spawnPoints.Length >= playerCount && spawnPoints[i]) {
-                go.transform.position = spawnPoints[i].position;
-                go.transform.rotation = spawnPoints[i].rotation;
+                spawnPosition = spawnPoints[i].position;
+                spawnRotation = spawnPoints[i].rotation;
             }
-            players.Add(p);
+
+            Player player = Instantiate(playerPrefab, spawnPosition, spawnRotation, this.transform).GetComponent<Player>();
+            player.SetPlayerIndex(i);
+            players.Add(player);
         }
     }
 }

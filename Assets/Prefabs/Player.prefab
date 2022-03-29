@@ -188,13 +188,20 @@ MonoBehaviour:
   forwardSpeed: 3
   rotationSpeed: 120
   maxForwardSpeed: 320.77
-  gravityScale: 0
+  gravityScale: 1
   airRotationSpeed: 60
   isGrounded: 0
   maxAngle: 45
   minAngle: -45
   followVirtualCamera: {fileID: 8336621076948441328}
   velocity: {x: 0, y: 0, z: 0}
+  distanceToCountAsGroundHit: 0.75
+  rayDist: 2.5
+  rayDistRotExtra: 0.75
+  collidableLayer:
+    serializedVersion: 2
+    m_Bits: 64
+  maxAngleThingy: 80
 --- !u!136 &5698332844854072368
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -205,10 +212,10 @@ CapsuleCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  m_Radius: 0.5
-  m_Height: 1
+  m_Radius: 0.8
+  m_Height: 0.83
   m_Direction: 1
-  m_Center: {x: 0, y: -0.5, z: 0}
+  m_Center: {x: 0, y: -0.32, z: 0}
 --- !u!1 &8336621076948441103
 GameObject:
   m_ObjectHideFlags: 0
@@ -234,7 +241,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8336621076948441103}
-  m_LocalRotation: {x: 0.13205145, y: 1.7452453e-15, z: -2.5051734e-17, w: 0.9912429}
+  m_LocalRotation: {x: 0.13205144, y: -0.00000001223643, z: 0.0000000016301135, w: 0.9912429}
   m_LocalPosition: {x: 0, y: 3.17, z: -8}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -272,7 +279,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 4.2543354, y: 1}
+    m_SensorSize: {x: 1.8265896, y: 1}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0

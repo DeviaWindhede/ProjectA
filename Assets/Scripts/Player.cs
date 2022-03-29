@@ -89,15 +89,13 @@ public class Player : MonoBehaviour, IPlayerInput
   // Start is called before the first frame update
   void Awake()
   {
-    this.body = gameObject.GetComponent<Rigidbody>();
+    this.body = GetComponent<Rigidbody>();
     this.SetupInputs();
-    this._verticalRotation = new Quaternion();
-    this._horizontalRotation = Quaternion.Euler(0, this.body.rotation.y, 0);
-    this._forward = transform.forward;
-    this._finalRotation = transform.rotation;
 
     this._horizontalRotation = Quaternion.Euler(Vector3.up * this.transform.rotation.eulerAngles.y);
-    this._verticalRotation.eulerAngles = Quaternion.Euler(this.transform.right).eulerAngles;
+    this._verticalRotation = Quaternion.Euler(this.transform.right);
+    this._forward = transform.forward;
+    this._finalRotation = transform.rotation;
   }
 
   private void SetupInputs() {
@@ -124,22 +122,116 @@ public class Player : MonoBehaviour, IPlayerInput
 
 
   [SerializeField] private Vector3 velocity;
-
-  // Update is called once per frame
+  private bool groundHit;
+  private RaycastHit hit;
+  Vector3 lastNormal = Vector3.zero;
+  Vector3 currentNormal = Vector3.zero;
+  [SerializeField] private float distanceToCountAsGroundHit = 1.25f;
+  private bool countAsGroundHit = false;
   void FixedUpdate()
   {
     float time = Time.fixedDeltaTime;
 
-    GroundedState(time);
-    FlyingState(time);
+    float radius = GetComponent<CapsuleCollider>().radius;
+    // if (Physics.SphereCast(transform.position, radius, Vector3.down, out hit, rayDist - radius, collidableLayer)) {
+    // // if (Physics.Raycast(transform.position, Vector3.down, out hit, rayDist, collidableLayer)) {
+    //   RaycastHit h;
+    //   if (Physics.Raycast(transform.position, Vector3.down, out h, rayDist * 1.5f, collidableLayer) && currentNormal != h.normal) {
+    //     lastNormal = currentNormal;
+    //     currentNormal = h.normal;
+    //     this.groundHit = transform.position.y - h.point.y < this.rayDist - 0.5f;
+    //   }
+    // }
+    this.groundHit = Physics.Raycast(transform.position, Vector3.down, out hit, rayDist * 1.5f, collidableLayer);
+    this.countAsGroundHit = groundHit;
+    if (groundHit) {
+      if (currentNormal != hit.normal) {
+        lastNormal = currentNormal;
+        currentNormal = hit.normal;
+      }
+      this.countAsGroundHit = Vector3.Distance(transform.position, hit.point) - radius < this.distanceToCountAsGroundHit;
+    }
+
+    // IsGrounded state checker, TODO: Move this to state machine
+    if (isGrounded) {
+      if (!groundHit) {
+        isGrounded = false;
+      }
+      else {
+        if (hit.normal != lastNormal) { // Compare new ledge angle
+          float angle = Vector3.Angle(hit.normal, lastNormal);
+          if (angle >= maxAngleThingy || !countAsGroundHit) { // TODO: Count as ground introduces bug when going up slope where this becomes false breifly in beginning
+            isGrounded = false;
+          }
+        }
+        else { // Compare current angle diff
+          float angle = Vector3.Angle(hit.normal, mesh.forward);
+          if (angle >= maxAngleThingy || !countAsGroundHit) { // TODO: Count as ground introduces bug when going up slope where this becomes false breifly in beginning
+            isGrounded = false;
+          }
+        }
+      }
+    }
+    else {
+      groundedCooldownTimer.Time += time;
+      if (countAsGroundHit && groundedCooldownTimer.Expired) {
+        isGrounded = true;
+        groundedCooldownTimer.Reset();
+      }
+    }
+
+    if (this.isGrounded) {
+      GroundedState(time);
+    }
+    else {
+      FlyingState(time);
+    }
 
     this.body.velocity = this.velocity * time;
   }
 
-  private void GroundedState(float time) {
-
+  public float rayDist = 1f;
+  public float rayDistRotExtra = 0.75f;
+  public LayerMask collidableLayer;
+  private bool ShouldSlide {
+    get {
+      var left = Vector3.Cross(this.hit.normal, Vector3.up);
+      var downhill = Vector3.Cross(this.hit.normal, left);
+      var dot = Vector3.Dot(downhill, transform.forward);
+      return dot >= -0.2f;
+    }
   }
 
+  public float maxAngleThingy = 45;
+  private void GroundedState(float time) {
+    HandleHorizontalStateRotation(time);
+
+    // Horizontal Velocity
+    float horizontalMagnitude = (this.Forward * forwardSpeed + this.velocity).magnitude;
+    this.velocity = this.Forward * horizontalMagnitude;
+
+    var vec = new Vector2(this.velocity.x, this.velocity.z);
+    if (vec.magnitude > maxForwardSpeed)
+    {
+      vec.Normalize();
+      this.velocity.x = vec.x * maxForwardSpeed;
+      this.velocity.z = vec.y * maxForwardSpeed;
+    }
+
+    if (useGravity && !countAsGroundHit)
+    {
+      Vector3 gravity = Vector3.down * this.gravityScale * time;
+      this.body.AddForce(gravity);
+      // this.velocity.y = this.body.velocity.y == 0 ? 0 : this.body.velocity.y + this.velocity.y;
+    }
+
+    if (isHolding)
+    {
+      this.velocity = Vector3.zero;
+    }
+  }
+
+  private Timer groundedCooldownTimer = new Timer(0.2f);
   private void FlyingState(float time) {
 
     #region Comments
@@ -198,13 +290,12 @@ public class Player : MonoBehaviour, IPlayerInput
     //   Mathf.PI / 2 * this.turnPercentage,
     //   0f).normalized * this.velocity.magnitude;
     #endregion
-    HandleRotation(time);
+
+    HandleVerticalStateRotation(time);
 
     // Horizontal Velocity
     float horizontalMagnitude = (this.Forward * forwardSpeed + this.velocity).magnitude;
     this.velocity = this.Forward * horizontalMagnitude;
-    // this.velocity.x = this.Forward.x * horizontalMagnitude;
-    // this.velocity.z = this.Forward.z * horizontalMagnitude;
 
     var vec = new Vector2(this.velocity.x, this.velocity.z);
     if (vec.magnitude > maxForwardSpeed)
@@ -214,7 +305,7 @@ public class Player : MonoBehaviour, IPlayerInput
       this.velocity.z = vec.y * maxForwardSpeed;
     }
 
-    if (useGravity && !isGrounded)
+    if (useGravity && !countAsGroundHit)
     {
       Vector3 gravity = Vector3.down * this.gravityScale * time;
       this.body.AddForce(gravity);
@@ -227,7 +318,34 @@ public class Player : MonoBehaviour, IPlayerInput
     }
   }
 
-  private void HandleRotation(float time) {
+  private void HandleHorizontalStateRotation(float time) {
+    // Horizontal Rotation
+    Quaternion horizontalDelta = Quaternion.Euler(Vector3.up * this.inputDirection.x * rotationSpeed * time);
+    this._horizontalRotation = this._horizontalRotation * horizontalDelta;
+
+    Vector3 averageNormal = hit.normal;
+    int count = 5;
+    float angleIncrement = 360f / count;
+    int incrementCount = 1;
+    for (int i = 0; i < count; i++) {
+      RaycastHit rayData;
+      var offset = this.Rotation * Quaternion.Euler(0, -angleIncrement * i, 0) * Vector3.forward;
+      if (Physics.Raycast(transform.position + offset, Vector3.down, out rayData, rayDist + rayDistRotExtra, collidableLayer)) {
+        averageNormal += rayData.normal;
+        incrementCount++;
+      }
+    }
+    averageNormal /= incrementCount;
+
+    Vector3 upVec = this.groundHit ? averageNormal : Vector3.up;
+    this._finalRotation = Quaternion.FromToRotation(Vector3.up, upVec) * _horizontalRotation;
+    this._forward = this._finalRotation * Vector3.forward;
+    this.mesh.rotation = this._finalRotation;
+
+    this._verticalRotation = Quaternion.Euler(this.mesh.transform.right);
+  }
+
+  private void HandleVerticalStateRotation(float time) {
     // Horizontal Rotation
     Quaternion horizontalDelta = Quaternion.Euler(Vector3.up * this.inputDirection.x * rotationSpeed * time);
     this._horizontalRotation = this._horizontalRotation * horizontalDelta;
@@ -264,7 +382,24 @@ public class Player : MonoBehaviour, IPlayerInput
       this.inputHandler.Unsubscribe();
     }
   }
+
+  private void OnDrawGizmos() {
+    Gizmos.color = Color.red;
+    Gizmos.DrawRay(transform.position, Vector3.down * rayDist);
+
+    Gizmos.color = Color.blue;
+    // var offset = this.Rotation * Vector3.forward;
+    // Gizmos.DrawRay(transform.position + offset, Vector3.down * rayDist);
+
+    int count = 5;
+    float angleIncrement = 360f / count;
+    for (int i = 0; i < count; i++) {
+      var offset = this.Rotation * Quaternion.Euler(0, -angleIncrement * i, 0) * Vector3.forward;
+      Gizmos.DrawRay(transform.position + offset, Vector3.down * (rayDist + rayDistRotExtra));
+    }
+  }
 }
+
 
 
 

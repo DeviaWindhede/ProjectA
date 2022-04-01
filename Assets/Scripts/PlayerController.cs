@@ -64,7 +64,13 @@ public class PlayerController : MonoBehaviour
     [SerializeField, Min(0)]
     private float distanceFromColliderToCountAsGroundHit = 1.25f;
     private bool countAsGroundHit = false;
-    private State CurrentState {
+
+    private enum PlayerPhysicsState
+    {
+        Grounded,
+        Airborne,
+    }
+    private PlayerPhysicsState CurrentState {
         get {
             return this._currentState;
         }
@@ -72,25 +78,30 @@ public class PlayerController : MonoBehaviour
             if (value != this._currentState) {
                 this._currentState = value;
                 switch (value) {
-                    case State.Grounded:
+                    case PlayerPhysicsState.Grounded:
                         OnGroundedEnter();
                         break;
-                    case State.Airborne:
+                    case PlayerPhysicsState.Airborne:
                         OnAirborneEnter();
                         break;
                 }
             }
         }
     }
-    private State _currentState = State.Airborne;
+
+    private PlayerPhysicsState _currentState = PlayerPhysicsState.Airborne;
     private bool isHolding = false;
     private new CapsuleCollider collider;
     private PlayerInputValues inputs;
     public float rayDist = 1f;
     public float rayDistRotExtra = 0.75f;
     public LayerMask collidableLayer;
-    public float maxAngleThingy = 45;
+    [SerializeField, Min(0)] float maxSlopeAngle = 45;
     private Timer groundedCooldownTimer = new Timer(0.2f);
+    private float speed;
+    [Min(0)] public float timeToRideInTurnedDirection = 0.3f;
+
+    #region Helpers
     private bool ShouldSlide
     {
         get
@@ -101,6 +112,22 @@ public class PlayerController : MonoBehaviour
             return dot >= -0.2f;
         }
     }
+
+    private bool IsSurfaceClimbable(Vector3 vec1, Vector3 vec2) {
+        if (groundHit) {
+            float angle = Vector3.Angle(vec1, vec2);
+            return angle < maxSlopeAngle;
+        }
+        return false;
+    }
+
+    private float GetNegativeAngle(Vector3 vectorA, Vector3 vectorB) {
+        float angle = Vector3.Angle(vectorA, vectorB);
+        Vector3 cross = Vector3.Cross(vectorA, vectorB);
+        if (cross.y < 0) angle = -angle;
+        return angle;
+    }
+    #endregion
 
     // Start is called before the first frame update
     void Awake()
@@ -117,50 +144,32 @@ public class PlayerController : MonoBehaviour
         this._finalRotation = transform.rotation;
     }
 
+    private void OnGroundedEnter() {
+        this.velocityDirection.y = 0;
+    }
+
+    private void OnAirborneEnter() { }
+
     public void UpdateInputs(PlayerInputValues inputs)
     {
         this.inputs = inputs;
-    }
-
-    private enum State
-    {
-        Grounded,
-        Airborne,
-    }
-
-
-    private bool IsSurfaceClimbable(Vector3 vec1, Vector3 vec2) {
-        if (groundHit) {
-            float angle = Vector3.Angle(vec1, vec2);
-            return angle < maxAngleThingy;
-        }
-        return false;
     }
 
     void FixedUpdate()
     {
         float time = Time.fixedDeltaTime;
 
-
-        if (CurrentState == State.Grounded) {
-            this.groundHit = Physics.Raycast(
-                transform.position,
-                Vector3.down,
-                out hit,
-                rayDist,
-                collidableLayer
-            );
+        Vector3 groundHitOffset = Vector3.zero;
+        if (CurrentState == PlayerPhysicsState.Airborne) {
+            groundHitOffset = this._finalRotation * Vector3.forward;
         }
-        else if (CurrentState == State.Airborne) {
-            var offset = this._finalRotation * Vector3.forward;
-            this.groundHit = Physics.Raycast(
-                transform.position + offset,
-                Vector3.down,
-                out hit,
-                rayDist + offset.y,
-                collidableLayer
-            );
-        }
+        this.groundHit = Physics.Raycast(
+            transform.position + groundHitOffset,
+            Vector3.down,
+            out hit,
+            rayDist + groundHitOffset.y,
+            collidableLayer
+        );
 
         this.countAsGroundHit = groundHit;
         if (groundHit)
@@ -176,42 +185,13 @@ public class PlayerController : MonoBehaviour
                 < this.distanceFromColliderToCountAsGroundHit;
         }
 
-        if (!groundHit) {
-            CurrentState = State.Airborne;
-            groundedCooldownTimer.Reset();
-            lastNormal = Vector3.zero;
-            currentNormal = Vector3.zero;
-        }
-        else {
-            if (CurrentState == State.Grounded) {
-                if (lastNormal != currentNormal) { // currentNormal will always have a value when groundHit is truthy
-                    // entering here means the player is trying to move from a surface to a new one or was flying and has now hit a surface
-
-                    Vector3 vec = lastNormal == Vector3.zero ? Vector3.up : lastNormal;  // If first time touching ground
-                    if (!IsSurfaceClimbable(hit.normal, vec)) {
-                        CurrentState = State.Airborne;
-                    }
-                }
-            }
-            else if (CurrentState == State.Airborne) {
-                lastNormal = Vector3.zero;
-                currentNormal = Vector3.zero;
-                groundedCooldownTimer.Time += time; // Cooldown until player is able to touch ground again
-                if (groundedCooldownTimer.Expired)
-                {
-                    if (countAsGroundHit && IsSurfaceClimbable(hit.normal, Vector3.up)) {
-                        CurrentState = State.Grounded;
-                        groundedCooldownTimer.Reset();
-                    }
-                }
-            }
-        }
+        HandlePhysicsStateTransitions(time);
 
         switch (this.CurrentState) {
-            case State.Grounded:
+            case PlayerPhysicsState.Grounded:
                 GroundedState(time);
                 break;
-            case State.Airborne:
+            case PlayerPhysicsState.Airborne:
                 FlyingState(time);
                 break;
         }
@@ -219,16 +199,39 @@ public class PlayerController : MonoBehaviour
         this.body.velocity = this.velocityDirection.normalized * speed * time;
     }
 
-    private void OnGroundedEnter() {
-        this.velocityDirection.y = 0;
+    private void HandlePhysicsStateTransitions(float time) {
+        if (!groundHit) {
+            CurrentState = PlayerPhysicsState.Airborne;
+            groundedCooldownTimer.Reset();
+            lastNormal = Vector3.zero;
+            currentNormal = Vector3.zero;
+        }
+        else {
+            if (CurrentState == PlayerPhysicsState.Grounded) {
+                if (lastNormal != currentNormal) { // currentNormal will always have a value when groundHit is truthy
+                    // entering here means the player is trying to move from a surface to a new one or was flying and has now hit a surface
+
+                    Vector3 vec = lastNormal == Vector3.zero ? Vector3.up : lastNormal;  // If first time touching ground
+                    if (!IsSurfaceClimbable(hit.normal, vec)) {
+                        CurrentState = PlayerPhysicsState.Airborne;
+                    }
+                }
+            }
+            else if (CurrentState == PlayerPhysicsState.Airborne) {
+                lastNormal = Vector3.zero;
+                currentNormal = Vector3.zero;
+                groundedCooldownTimer.Time += time; // Cooldown until player is able to touch ground again
+                if (groundedCooldownTimer.Expired)
+                {
+                    if (countAsGroundHit && IsSurfaceClimbable(hit.normal, Vector3.up)) {
+                        CurrentState = PlayerPhysicsState.Grounded;
+                        groundedCooldownTimer.Reset();
+                    }
+                }
+            }
+        }
     }
 
-    private void OnAirborneEnter() {
-
-    }
-
-    private float speed;
-    [Min(0)] public float timeToRideInTurnedDirection = 0.3f;
     private void GroundedState(float time)
     {
         HandleHorizontalStateRotation(time);
@@ -266,13 +269,6 @@ public class PlayerController : MonoBehaviour
         // {
         //     this.velocity = Vector3.zero;
         // }
-    }
-
-    private float GetNegativeAngle(Vector3 vectorA, Vector3 vectorB) {
-        float angle = Vector3.Angle(vectorA, vectorB);
-        Vector3 cross = Vector3.Cross(vectorA, vectorB);
-        if (cross.y < 0) angle = -angle;
-        return angle;
     }
 
     private void FlyingState(float time)
@@ -376,7 +372,7 @@ public class PlayerController : MonoBehaviour
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.red;
-        if (CurrentState == State.Grounded) {
+        if (CurrentState == PlayerPhysicsState.Grounded) {
             Gizmos.DrawRay(transform.position, Vector3.down * rayDist);
 
             Gizmos.color = Color.blue;
@@ -391,7 +387,7 @@ public class PlayerController : MonoBehaviour
             Gizmos.color = Color.yellow;
             Gizmos.DrawRay(transform.position, velocityDirection);
         }
-        else if (CurrentState == State.Airborne) {
+        else if (CurrentState == PlayerPhysicsState.Airborne) {
             var offset = this._finalRotation * Vector3.forward;
             Gizmos.DrawRay(transform.position + offset, Vector3.down * (rayDist + offset.y));
         }

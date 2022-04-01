@@ -44,10 +44,10 @@ public class PlayerController : MonoBehaviour
     // private bool isGrounded = false;
 
     [SerializeField]
-    private float maxAngle = 45;
+    private float maxAngle = 135;
 
     [SerializeField]
-    private float minAngle = -45;
+    private float minAngle = -135;
     Vector3 _forward;
     private Vector3 Forward { get { return this._finalRotation * Vector3.forward; } }
     Quaternion _horizontalRotation;
@@ -368,9 +368,8 @@ public class PlayerController : MonoBehaviour
             * inputs.direction.y
             * this.lookRotationDegsPerSecond
             * time;
-
         float verticalAngle = (this._verticalRotation.eulerAngles + verticalDeltaEuler).x % 360;
-        if (verticalAngle < 45 || verticalAngle > 315) // TODO: Add variables for this
+        if (verticalAngle < minAngle + 180 || verticalAngle > maxAngle + 180)
             this._verticalRotation.eulerAngles =
                 this._verticalRotation.eulerAngles + verticalDeltaEuler;
 

@@ -229,7 +229,7 @@ MonoBehaviour:
   collidableLayer:
     serializedVersion: 2
     m_Bits: 64
-  maxAngleThingy: 45
+  maxSlopeAngle: 80
   timeToRideInTurnedDirection: 0.6
 --- !u!1 &8336621076948441103
 GameObject:

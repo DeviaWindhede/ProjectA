@@ -114,11 +114,8 @@ public class PlayerController : MonoBehaviour
     }
 
     private bool IsSurfaceClimbable(Vector3 vec1, Vector3 vec2) {
-        if (groundHit) {
-            float angle = Vector3.Angle(vec1, vec2);
-            return angle < maxSlopeAngle;
-        }
-        return false;
+        float angle = Vector3.Angle(vec1, vec2);
+        return angle < maxSlopeAngle;
     }
 
     private float GetNegativeAngle(Vector3 vectorA, Vector3 vectorB) {
@@ -126,6 +123,15 @@ public class PlayerController : MonoBehaviour
         Vector3 cross = Vector3.Cross(vectorA, vectorB);
         if (cross.y < 0) angle = -angle;
         return angle;
+    }
+
+    private void log(params System.Object[] arguments) {
+        string finalString = string.Empty;
+        for (int i = 0; i < arguments.Length; i++) {
+            finalString += arguments[i];
+            if (i != arguments.Length - 1) finalString += " , ";
+        }
+        Debug.Log(finalString);
     }
     #endregion
 
@@ -148,7 +154,9 @@ public class PlayerController : MonoBehaviour
         this.velocityDirection.y = 0;
     }
 
-    private void OnAirborneEnter() { }
+    private void OnAirborneEnter() {
+        this._verticalRotation = Quaternion.Euler(this.mesh.transform.right);
+    }
 
     public void UpdateInputs(PlayerInputValues inputs)
     {
@@ -208,7 +216,6 @@ public class PlayerController : MonoBehaviour
             if (CurrentState == PlayerPhysicsState.Grounded) {
                 if (lastNormal != currentNormal) { // currentNormal will always have a value when groundHit is truthy
                     // entering here means the player is trying to move from a surface to a new one or was flying and has now hit a surface
-
                     Vector3 vec = lastNormal == Vector3.zero ? Vector3.up : lastNormal;  // If first time touching ground
                     if (!IsSurfaceClimbable(hit.normal, vec)) {
                         CurrentState = PlayerPhysicsState.Airborne;
@@ -291,6 +298,12 @@ public class PlayerController : MonoBehaviour
             this.body.AddForce(gravity);
         }
 
+        // Speed acceleration
+        speed += time / timeToReachFullSpeed * maxForwardSpeed;
+        if (speed > maxForwardSpeed) {
+            speed = maxForwardSpeed;
+        }
+
         if (isHolding)
         {
             this.velocityDirection = Vector3.zero;
@@ -338,8 +351,6 @@ public class PlayerController : MonoBehaviour
         this._finalRotation = _verticalRotation * _horizontalRotation;
         this._forward = this._finalRotation * Vector3.forward;
         this.mesh.rotation = this._finalRotation;
-
-        // this._verticalRotation = Quaternion.Euler(this.mesh.transform.right);
     }
 
     private void HandleVerticalStateRotation(float time)

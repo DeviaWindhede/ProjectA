@@ -7,77 +7,101 @@ using System.Linq;
 [RequireComponent(typeof(Rigidbody))]
 public class PlayerController : MonoBehaviour
 {
-    private Rigidbody body;
+    private Rigidbody _body;
 
     [SerializeField]
-    private Transform mesh;
+    private Transform _mesh;
 
     [SerializeField]
-    private bool useGravity = true;
+    private bool _useGravity = true;
 
-    [SerializeField, Min(0f)]
-    private float steeringMultiplier = 1f;
-
-    [SerializeField, Range(0f, 1f)]
-    private float turnPercentage = 1;
+    [Header("Velocity")]
+    [SerializeField]
+    private float _secondsToReachFullSpeed = 5;
 
     [SerializeField]
-    private float timeToReachFullSpeed = 5;
+    private float _maxForwardSpeed = 50f;
 
     [SerializeField]
-    private float lookRotationDegsPerSecond = 5;
+    private float _gravityScale = 9.82f;
+
+    [Header("Rotation")]
+    [SerializeField]
+    private float _lookRotationDegsPerSecond = 5;
+    [SerializeField, Min(0)]
+    private float _timeToRideInTurnedDirection = 0.3f;
 
     [SerializeField, Min(0)]
-    private float rotationSpeed = 70;
-    [Min(0.01f)] public float slippyScalar = 3;
+    private float _rotationSpeed = 70;
+
+    [SerializeField, Min(0.01f)]
+    private float _slippinessScale = 3;
 
     [SerializeField]
-    private float maxForwardSpeed = 50f;
+    private float _airRotationSpeed = 50f;
 
     [SerializeField]
-    private float gravityScale = 9.82f;
+    private float _maxAirborneAngle = 135;
 
     [SerializeField]
-    private float airRotationSpeed = 50f;
+    private float _minAirborneAngle = -135;
 
-    // [SerializeField]
-    // private bool isGrounded = false;
-
-    [SerializeField]
-    private float maxAngle = 135;
-
-    [SerializeField]
-    private float minAngle = -135;
-    Vector3 _forward;
-    private Vector3 Forward { get { return this._finalRotation * Vector3.forward; } }
-    Quaternion _horizontalRotation;
-    Quaternion _verticalRotation;
-    Quaternion _finalRotation = new Quaternion();
-
-    [SerializeField]
-    private Vector3 velocityDirection;
-    private bool groundHit;
-    private RaycastHit hit;
-    Vector3 lastNormal = Vector3.zero;
-    Vector3 currentNormal = Vector3.zero;
-
+    [Header("Ground Check")]
     [SerializeField, Min(0)]
     private float distanceFromColliderToCountAsGroundHit = 1.25f;
-    private bool countAsGroundHit = false;
+
+    [SerializeField, Min(0)]
+    private float _maxClimbableSlopeAngle = 45;
+    [SerializeField] private float _groundRayDistance = 1f;
+    [SerializeField] private float _groundRotationRayExtraDistance = 0.75f;
+    [SerializeField] private LayerMask _collidableLayer;
+
+
+    // Input
+    private PlayerInputValues _inputs;
+
+    // Component
+    private CapsuleCollider _collider;
+    private bool _groundHit;
+    private bool _countAsGroundHit;
+    private RaycastHit _groundHitInfo;
+    private Vector3 _lastNormal = Vector3.zero;
+    private Vector3 _currentNormal = Vector3.zero;
+
+    // States
+    private PlayerPhysicsState _currentState = PlayerPhysicsState.Airborne;
+    private Timer _groundedCooldownTimer = new Timer(0.2f);
+
+    // Velocity
+    private float _speed;
+    private Vector3 _velocityDirection;
+
+    // Rotation
+    private Vector3 _forward;
+    private Vector3 Forward
+    {
+        get { return _finalRotation * Vector3.forward; }
+    }
+    private Quaternion _horizontalRotation;
+    private Quaternion _verticalRotation;
+    private Quaternion _finalRotation = new Quaternion();
 
     private enum PlayerPhysicsState
     {
         Grounded,
         Airborne,
     }
-    private PlayerPhysicsState CurrentState {
-        get {
-            return this._currentState;
-        }
-        set {
-            if (value != this._currentState) {
-                this._currentState = value;
-                switch (value) {
+
+    private PlayerPhysicsState CurrentState
+    {
+        get { return _currentState; }
+        set
+        {
+            if (value != _currentState)
+            {
+                _currentState = value;
+                switch (value)
+                {
                     case PlayerPhysicsState.Grounded:
                         OnGroundedEnter();
                         break;
@@ -89,47 +113,41 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private PlayerPhysicsState _currentState = PlayerPhysicsState.Airborne;
-    private bool isHolding = false;
-    private new CapsuleCollider collider;
-    private PlayerInputValues inputs;
-    public float rayDist = 1f;
-    public float rayDistRotExtra = 0.75f;
-    public LayerMask collidableLayer;
-    [SerializeField, Min(0)] float maxSlopeAngle = 45;
-    private Timer groundedCooldownTimer = new Timer(0.2f);
-    private float speed;
-    [Min(0)] public float timeToRideInTurnedDirection = 0.3f;
-
     #region Helpers
     private bool ShouldSlide
     {
         get
         {
-            var left = Vector3.Cross(this.hit.normal, Vector3.up);
-            var downhill = Vector3.Cross(this.hit.normal, left);
+            var left = Vector3.Cross(_groundHitInfo.normal, Vector3.up);
+            var downhill = Vector3.Cross(_groundHitInfo.normal, left);
             var dot = Vector3.Dot(downhill, transform.forward);
             return dot >= -0.2f;
         }
     }
 
-    private bool IsSurfaceClimbable(Vector3 vec1, Vector3 vec2) {
+    private bool IsSurfaceClimbable(Vector3 vec1, Vector3 vec2)
+    {
         float angle = Vector3.Angle(vec1, vec2);
-        return angle < maxSlopeAngle;
+        return angle < _maxClimbableSlopeAngle;
     }
 
-    private float GetNegativeAngle(Vector3 vectorA, Vector3 vectorB) {
+    private float GetNegativeAngle(Vector3 vectorA, Vector3 vectorB)
+    {
         float angle = Vector3.Angle(vectorA, vectorB);
         Vector3 cross = Vector3.Cross(vectorA, vectorB);
-        if (cross.y < 0) angle = -angle;
+        if (cross.y < 0)
+            angle = -angle;
         return angle;
     }
 
-    private void log(params System.Object[] arguments) {
+    private void log(params System.Object[] arguments)
+    {
         string finalString = string.Empty;
-        for (int i = 0; i < arguments.Length; i++) {
+        for (int i = 0; i < arguments.Length; i++)
+        {
             finalString += arguments[i];
-            if (i != arguments.Length - 1) finalString += " , ";
+            if (i != arguments.Length - 1)
+                finalString += " , ";
         }
         Debug.Log(finalString);
     }
@@ -138,30 +156,32 @@ public class PlayerController : MonoBehaviour
     // Start is called before the first frame update
     void Awake()
     {
-        this.body = GetComponent<Rigidbody>();
-        this.collider = GetComponent<CapsuleCollider>();
+        _body = GetComponent<Rigidbody>();
+        _collider = GetComponent<CapsuleCollider>();
 
-        this._horizontalRotation = Quaternion.Euler(
+        _horizontalRotation = Quaternion.Euler(
             Vector3.up * this.transform.rotation.eulerAngles.y
         );
         this.transform.rotation = Quaternion.identity;
-        this._verticalRotation = Quaternion.Euler(this.transform.right);
-        this._forward = transform.forward;
-        this._finalRotation = transform.rotation;
+        _verticalRotation = Quaternion.Euler(this.transform.right);
+        _forward = transform.forward;
+        _finalRotation = transform.rotation;
     }
 
-    private void OnGroundedEnter() {
-        this.velocityDirection.y = 0;
+    private void OnGroundedEnter()
+    {
+        _velocityDirection.y = 0;
     }
 
-    private void OnAirborneEnter() {
-        var euler = this.mesh.rotation.eulerAngles;
-        this._verticalRotation = Quaternion.Euler(euler.x, 0, euler.z);
+    private void OnAirborneEnter()
+    {
+        var euler = _mesh.rotation.eulerAngles;
+        _verticalRotation = Quaternion.Euler(euler.x, 0, euler.z);
     }
 
     public void UpdateInputs(PlayerInputValues inputs)
     {
-        this.inputs = inputs;
+        _inputs = inputs;
     }
 
     void FixedUpdate()
@@ -169,34 +189,36 @@ public class PlayerController : MonoBehaviour
         float time = Time.fixedDeltaTime;
 
         Vector3 groundHitOffset = Vector3.zero;
-        if (CurrentState == PlayerPhysicsState.Airborne) {
-            groundHitOffset = this._finalRotation * Vector3.forward;
+        if (CurrentState == PlayerPhysicsState.Airborne)
+        {
+            groundHitOffset = _finalRotation * Vector3.forward;
         }
-        this.groundHit = Physics.Raycast(
+        _groundHit = Physics.Raycast(
             transform.position + groundHitOffset,
             Vector3.down,
-            out hit,
-            rayDist + groundHitOffset.y,
-            collidableLayer
+            out _groundHitInfo,
+            _groundRayDistance + groundHitOffset.y,
+            _collidableLayer
         );
 
-        this.countAsGroundHit = groundHit;
-        if (groundHit)
+        _countAsGroundHit = _groundHit;
+        if (_groundHit)
         {
-            if (currentNormal != hit.normal)
+            if (_currentNormal != _groundHitInfo.normal)
             {
-                lastNormal = currentNormal;
-                currentNormal = hit.normal;
+                _lastNormal = _currentNormal;
+                _currentNormal = _groundHitInfo.normal;
             }
-            var offset = this._finalRotation * Vector3.forward;
-            this.countAsGroundHit =
-                Vector3.Distance(transform.position + offset, hit.point) - collider.height / 2
+            var offset = _finalRotation * Vector3.forward;
+            _countAsGroundHit =
+                Vector3.Distance(transform.position + offset, _groundHitInfo.point) - _collider.height / 2
                 < this.distanceFromColliderToCountAsGroundHit;
         }
 
         HandlePhysicsStateTransitions(time);
 
-        switch (this.CurrentState) {
+        switch (this.CurrentState)
+        {
             case PlayerPhysicsState.Grounded:
                 GroundedState(time);
                 break;
@@ -206,32 +228,40 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private void HandlePhysicsStateTransitions(float time) {
-        if (!groundHit) {
+    private void HandlePhysicsStateTransitions(float time)
+    {
+        if (!_groundHit)
+        {
             CurrentState = PlayerPhysicsState.Airborne;
-            groundedCooldownTimer.Reset();
-            lastNormal = Vector3.zero;
-            currentNormal = Vector3.zero;
+            _groundedCooldownTimer.Reset();
+            _lastNormal = Vector3.zero;
+            _currentNormal = Vector3.zero;
         }
-        else {
-            if (CurrentState == PlayerPhysicsState.Grounded) {
-                if (lastNormal != currentNormal) { // currentNormal will always have a value when groundHit is truthy
+        else
+        {
+            if (CurrentState == PlayerPhysicsState.Grounded)
+            {
+                if (_lastNormal != _currentNormal)
+                { // currentNormal will always have a value when groundHit is truthy
                     // entering here means the player is trying to move from a surface to a new one or was flying and has now hit a surface
-                    Vector3 vec = lastNormal == Vector3.zero ? Vector3.up : lastNormal;  // If first time touching ground
-                    if (!IsSurfaceClimbable(hit.normal, vec)) {
+                    Vector3 vec = _lastNormal == Vector3.zero ? Vector3.up : _lastNormal; // If first time touching ground
+                    if (!IsSurfaceClimbable(_groundHitInfo.normal, vec))
+                    {
                         CurrentState = PlayerPhysicsState.Airborne;
                     }
                 }
             }
-            else if (CurrentState == PlayerPhysicsState.Airborne) {
-                lastNormal = Vector3.zero;
-                currentNormal = Vector3.zero;
-                groundedCooldownTimer.Time += time; // Cooldown until player is able to touch ground again
-                if (groundedCooldownTimer.Expired)
+            else if (CurrentState == PlayerPhysicsState.Airborne)
+            {
+                _lastNormal = Vector3.zero;
+                _currentNormal = Vector3.zero;
+                _groundedCooldownTimer.Time += time; // Cooldown until player is able to touch ground again
+                if (_groundedCooldownTimer.Expired)
                 {
-                    if (countAsGroundHit && IsSurfaceClimbable(hit.normal, Vector3.up)) {
+                    if (_countAsGroundHit && IsSurfaceClimbable(_groundHitInfo.normal, Vector3.up))
+                    {
                         CurrentState = PlayerPhysicsState.Grounded;
-                        groundedCooldownTimer.Reset();
+                        _groundedCooldownTimer.Reset();
                     }
                 }
             }
@@ -245,25 +275,32 @@ public class PlayerController : MonoBehaviour
         // Horizontal Velocity
         Vector3 horizontalDirection = _horizontalRotation * Vector3.forward;
         Quaternion rotationExtra = Quaternion.Euler(
-            Vector3.up * 45 / (0.01f + rotationSpeed) * Mathf.Sign(GetNegativeAngle(velocityDirection, horizontalDirection))
+            Vector3.up
+                * 45
+                / (0.01f + _rotationSpeed)
+                * Mathf.Sign(GetNegativeAngle(_velocityDirection, horizontalDirection))
         );
-        velocityDirection += _horizontalRotation * rotationExtra * Vector3.forward * rotationSpeed * time;
-        if (velocityDirection.magnitude > slippyScalar) {
-            velocityDirection = velocityDirection.normalized * slippyScalar;
+        _velocityDirection +=
+            _horizontalRotation * rotationExtra * Vector3.forward * _rotationSpeed * time;
+        if (_velocityDirection.magnitude > _slippinessScale)
+        {
+            _velocityDirection = _velocityDirection.normalized * _slippinessScale;
         }
 
-        float dot = Vector3.Dot(horizontalDirection.normalized, velocityDirection.normalized);
-        if (dot >= 1 - 0.0001f && rotationSpeed > 0) {
-            velocityDirection = horizontalDirection.normalized;
+        float dot = Vector3.Dot(horizontalDirection.normalized, _velocityDirection.normalized);
+        if (dot >= 1 - 0.0001f && _rotationSpeed > 0)
+        {
+            _velocityDirection = horizontalDirection.normalized;
         }
 
         // Speed acceleration
-        speed += time / timeToReachFullSpeed * maxForwardSpeed;
-        if (speed > maxForwardSpeed) {
-            speed = maxForwardSpeed;
+        _speed += time / _secondsToReachFullSpeed * _maxForwardSpeed;
+        if (_speed > _maxForwardSpeed)
+        {
+            _speed = _maxForwardSpeed;
         }
 
-        if (useGravity && !countAsGroundHit)
+        if (_useGravity && !_countAsGroundHit)
         {
             // Vector3 gravity = Vector3.down * this.gravityScale * time;
             // this.body.AddForce(gravity);
@@ -274,7 +311,7 @@ public class PlayerController : MonoBehaviour
         // {
         //     this.velocity = Vector3.zero;
         // }
-        this.body.velocity = _verticalRotation * this.velocityDirection.normalized * speed * time;
+        _body.velocity = _verticalRotation * _velocityDirection.normalized * _speed * time;
     }
 
     private void FlyingState(float time)
@@ -282,45 +319,47 @@ public class PlayerController : MonoBehaviour
         HandleVerticalStateRotation(time);
 
         // Horizontal Velocity
-        float horizontalMagnitude = (this._forward * timeToReachFullSpeed + this.velocityDirection).magnitude;
-        this.velocityDirection = this._forward * horizontalMagnitude;
+        float horizontalMagnitude =
+            (_forward * _secondsToReachFullSpeed + _velocityDirection).magnitude;
+        _velocityDirection = _forward * horizontalMagnitude;
 
-        var vec = new Vector2(this.velocityDirection.x, this.velocityDirection.z);
-        if (vec.magnitude > maxForwardSpeed)
+        var vec = new Vector2(_velocityDirection.x, _velocityDirection.z);
+        if (vec.magnitude > _maxForwardSpeed)
         {
             vec.Normalize();
-            this.velocityDirection.x = vec.x * maxForwardSpeed;
-            this.velocityDirection.z = vec.y * maxForwardSpeed;
+            _velocityDirection.x = vec.x * _maxForwardSpeed;
+            _velocityDirection.z = vec.y * _maxForwardSpeed;
         }
 
-        if (useGravity && !countAsGroundHit)
+        if (_useGravity && !_countAsGroundHit)
         {
-            Vector3 gravity = Vector3.down * this.gravityScale * time;
-            this.body.AddForce(gravity);
+            Vector3 gravity = Vector3.down * _gravityScale * time;
+            _body.AddForce(gravity);
         }
 
         // Speed acceleration
-        speed += time / timeToReachFullSpeed * maxForwardSpeed;
-        if (speed > maxForwardSpeed) {
-            speed = maxForwardSpeed;
+        _speed += time / _secondsToReachFullSpeed * _maxForwardSpeed;
+        if (_speed > _maxForwardSpeed)
+        {
+            _speed = _maxForwardSpeed;
         }
 
-        if (isHolding)
+        if (_inputs.isInteracting)
         {
-            this.velocityDirection = Vector3.zero;
+            _velocityDirection = Vector3.zero;
         }
-        this.body.velocity = this.velocityDirection.normalized * speed * time;
+        _body.velocity = _velocityDirection.normalized * _speed * time;
     }
 
     private void HandleHorizontalStateRotation(float time)
     {
         // Horizontal Rotation
         Quaternion horizontalDelta = Quaternion.Euler(
-            Vector3.up * lookRotationDegsPerSecond * time * inputs.direction.x
+            Vector3.up * _lookRotationDegsPerSecond * time * _inputs.direction.x
         );
-        this._horizontalRotation = this._horizontalRotation * horizontalDelta;
+        _horizontalRotation = _horizontalRotation * horizontalDelta;
 
-        Vector3 averageNormal = hit.normal;
+        Vector3 averageNormal = _groundHitInfo.normal;
         int count = 5;
         float angleIncrement = 360f / count;
         int incrementCount = 1;
@@ -328,18 +367,20 @@ public class PlayerController : MonoBehaviour
         {
             RaycastHit rayData;
             var offset =
-                this._finalRotation * Quaternion.Euler(0, -angleIncrement * i, 0) * Vector3.forward;
-            if (Physics.Raycast(
+                _finalRotation * Quaternion.Euler(0, -angleIncrement * i, 0) * Vector3.forward;
+            if (
+                Physics.Raycast(
                     transform.position + offset,
                     Vector3.down,
                     out rayData,
-                    rayDist + rayDistRotExtra,
-                    collidableLayer
+                    _groundRayDistance + _groundRotationRayExtraDistance,
+                    _collidableLayer
                 )
             )
             {
-                Vector3 vec = currentNormal == Vector3.zero ? Vector3.up : currentNormal;  // If first time touching ground
-                if (IsSurfaceClimbable(rayData.normal, vec)) {
+                Vector3 vec = _currentNormal == Vector3.zero ? Vector3.up : _currentNormal; // If first time touching ground
+                if (IsSurfaceClimbable(rayData.normal, vec))
+                {
                     averageNormal += rayData.normal;
                     incrementCount++;
                 }
@@ -347,44 +388,45 @@ public class PlayerController : MonoBehaviour
         }
         averageNormal /= incrementCount;
 
-        Vector3 upVec = this.groundHit ? averageNormal : Vector3.up;
-        this._verticalRotation = Quaternion.FromToRotation(Vector3.up, upVec);
-        this._finalRotation = _verticalRotation * _horizontalRotation;
-        this._forward = this._finalRotation * Vector3.forward;
-        this.mesh.rotation = this._finalRotation;
+        Vector3 upVec = _groundHit ? averageNormal : Vector3.up;
+        _verticalRotation = Quaternion.FromToRotation(Vector3.up, upVec);
+        _finalRotation = _verticalRotation * _horizontalRotation;
+        _forward = _finalRotation * Vector3.forward;
+        _mesh.rotation = _finalRotation;
     }
 
     private void HandleVerticalStateRotation(float time)
     {
         // Horizontal Rotation
         Quaternion horizontalDelta = Quaternion.Euler(
-            Vector3.up * inputs.direction.x * lookRotationDegsPerSecond * time
+            Vector3.up * _inputs.direction.x * _lookRotationDegsPerSecond * time
         );
-        this._horizontalRotation = this._horizontalRotation * horizontalDelta;
+        _horizontalRotation = _horizontalRotation * horizontalDelta;
 
         // Vertical Direction Handling (This would probably be easier with proper Quaternion calculations)
         Vector3 verticalDeltaEuler =
             Quaternion.Euler(Vector3.right).eulerAngles
-            * inputs.direction.y
-            * this.lookRotationDegsPerSecond
+            * _inputs.direction.y
+            * _lookRotationDegsPerSecond
             * time;
-        float verticalAngle = (this._verticalRotation.eulerAngles + verticalDeltaEuler).x % 360;
-        if (verticalAngle < minAngle + 180 || verticalAngle > maxAngle + 180)
-            this._verticalRotation.eulerAngles =
-                this._verticalRotation.eulerAngles + verticalDeltaEuler;
+        float verticalAngle = (_verticalRotation.eulerAngles + verticalDeltaEuler).x % 360;
+        if (verticalAngle < _minAirborneAngle + 180 || verticalAngle > _maxAirborneAngle + 180)
+            _verticalRotation.eulerAngles =
+                _verticalRotation.eulerAngles + verticalDeltaEuler;
 
-        Vector3 rotationDirection = this._horizontalRotation * _verticalRotation * Vector3.forward;
+        Vector3 rotationDirection = _horizontalRotation * _verticalRotation * Vector3.forward;
 
-        this._finalRotation = Quaternion.LookRotation(rotationDirection);
-        this._forward = this._finalRotation * Vector3.forward;
-        this.mesh.rotation = this._finalRotation;
+        _finalRotation = Quaternion.LookRotation(rotationDirection);
+        _forward = _finalRotation * Vector3.forward;
+        _mesh.rotation = _finalRotation;
     }
 
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.red;
-        if (CurrentState == PlayerPhysicsState.Grounded) {
-            Gizmos.DrawRay(transform.position, Vector3.down * rayDist);
+        if (CurrentState == PlayerPhysicsState.Grounded)
+        {
+            Gizmos.DrawRay(transform.position, Vector3.down * _groundRayDistance);
 
             Gizmos.color = Color.blue;
             int count = 5;
@@ -392,17 +434,23 @@ public class PlayerController : MonoBehaviour
             for (int i = 0; i < count; i++)
             {
                 var offset =
-                    this._finalRotation * Quaternion.Euler(0, -angleIncrement * i, 0) * Vector3.forward;
-                Gizmos.DrawRay(transform.position + offset, Vector3.down * (rayDist + rayDistRotExtra));
+                    _finalRotation
+                    * Quaternion.Euler(0, -angleIncrement * i, 0)
+                    * Vector3.forward;
+                Gizmos.DrawRay(
+                    transform.position + offset,
+                    Vector3.down * (_groundRayDistance + _groundRotationRayExtraDistance)
+                );
             }
             Gizmos.color = Color.yellow;
-            Gizmos.DrawRay(transform.position, velocityDirection);
+            Gizmos.DrawRay(transform.position, _velocityDirection);
         }
-        else if (CurrentState == PlayerPhysicsState.Airborne) {
-            var offset = this._finalRotation * Vector3.forward;
-            Gizmos.DrawRay(transform.position + offset, Vector3.down * (rayDist + offset.y));
+        else if (CurrentState == PlayerPhysicsState.Airborne)
+        {
+            var offset = _finalRotation * Vector3.forward;
+            Gizmos.DrawRay(transform.position + offset, Vector3.down * (_groundRayDistance + offset.y));
         }
         Gizmos.color = Color.black;
-        Gizmos.DrawRay(transform.position, this.mesh.transform.forward * 5);
+        Gizmos.DrawRay(transform.position, _mesh.transform.forward * 5);
     }
 }

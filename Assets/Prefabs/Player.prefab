@@ -209,28 +209,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9b461686864e5b947bb57a2fda5bbd1a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mesh: {fileID: 5232675846030945889}
-  useGravity: 1
-  steeringMultiplier: 1
-  turnPercentage: 1
-  timeToReachFullSpeed: 5
-  lookRotationDegsPerSecond: 360
-  rotationSpeed: 22.25
-  slippyScalar: 3.48
-  maxForwardSpeed: 300
-  gravityScale: 9.82
-  airRotationSpeed: 50
-  maxAngle: 135
-  minAngle: -135
-  velocityDirection: {x: 0, y: 0, z: 0}
+  _mesh: {fileID: 5232675846030945889}
+  _useGravity: 1
+  _secondsToReachFullSpeed: 5
+  _maxForwardSpeed: 300
+  _gravityScale: 9.82
+  _lookRotationDegsPerSecond: 360
+  _timeToRideInTurnedDirection: 0.6
+  _rotationSpeed: 22
+  _slippinessScale: 3
+  _airRotationSpeed: 50
+  _maxAirborneAngle: 135
+  _minAirborneAngle: -135
   distanceFromColliderToCountAsGroundHit: 0.5
-  rayDist: 2.5
-  rayDistRotExtra: 0
-  collidableLayer:
+  _maxClimbableSlopeAngle: 80
+  _groundRayDistance: 2.5
+  _groundRotationRayExtraDistance: 0
+  _collidableLayer:
     serializedVersion: 2
     m_Bits: 64
-  maxSlopeAngle: 80
-  timeToRideInTurnedDirection: 0.6
 --- !u!1 &8336621076948441103
 GameObject:
   m_ObjectHideFlags: 0

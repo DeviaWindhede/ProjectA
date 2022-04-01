@@ -195,8 +195,6 @@ public class PlayerController : MonoBehaviour
                 FlyingState(time);
                 break;
         }
-
-        this.body.velocity = this.velocityDirection.normalized * speed * time;
     }
 
     private void HandlePhysicsStateTransitions(float time) {
@@ -237,7 +235,6 @@ public class PlayerController : MonoBehaviour
         HandleHorizontalStateRotation(time);
 
         // Horizontal Velocity
-        this._finalRotation = _horizontalRotation;
         Vector3 horizontalDirection = _horizontalRotation * Vector3.forward;
         Quaternion rotationExtra = Quaternion.Euler(
             Vector3.up * 45 / (0.01f + rotationSpeed) * Mathf.Sign(GetNegativeAngle(velocityDirection, horizontalDirection))
@@ -269,6 +266,7 @@ public class PlayerController : MonoBehaviour
         // {
         //     this.velocity = Vector3.zero;
         // }
+        this.body.velocity = _verticalRotation * this.velocityDirection.normalized * speed * time;
     }
 
     private void FlyingState(float time)
@@ -297,6 +295,7 @@ public class PlayerController : MonoBehaviour
         {
             this.velocityDirection = Vector3.zero;
         }
+        this.body.velocity = this.velocityDirection.normalized * speed * time;
     }
 
     private void HandleHorizontalStateRotation(float time)
@@ -335,11 +334,12 @@ public class PlayerController : MonoBehaviour
         averageNormal /= incrementCount;
 
         Vector3 upVec = this.groundHit ? averageNormal : Vector3.up;
-        this._finalRotation = Quaternion.FromToRotation(Vector3.up, upVec) * _horizontalRotation;
+        this._verticalRotation = Quaternion.FromToRotation(Vector3.up, upVec);
+        this._finalRotation = _verticalRotation * _horizontalRotation;
         this._forward = this._finalRotation * Vector3.forward;
         this.mesh.rotation = this._finalRotation;
 
-        this._verticalRotation = Quaternion.Euler(this.mesh.transform.right);
+        // this._verticalRotation = Quaternion.Euler(this.mesh.transform.right);
     }
 
     private void HandleVerticalStateRotation(float time)

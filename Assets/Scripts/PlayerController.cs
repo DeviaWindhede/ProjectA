@@ -155,7 +155,8 @@ public class PlayerController : MonoBehaviour
     }
 
     private void OnAirborneEnter() {
-        this._verticalRotation = Quaternion.Euler(this.mesh.transform.right);
+        var euler = this.mesh.rotation.eulerAngles;
+        this._verticalRotation = Quaternion.Euler(euler.x, 0, euler.z);
     }
 
     public void UpdateInputs(PlayerInputValues inputs)
@@ -402,5 +403,7 @@ public class PlayerController : MonoBehaviour
             var offset = this._finalRotation * Vector3.forward;
             Gizmos.DrawRay(transform.position + offset, Vector3.down * (rayDist + offset.y));
         }
+        Gizmos.color = Color.black;
+        Gizmos.DrawRay(transform.position, this.mesh.transform.forward * 5);
     }
 }

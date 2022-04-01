@@ -22,10 +22,14 @@ public class PlayerController : MonoBehaviour
     private float turnPercentage = 1;
 
     [SerializeField]
-    private float forwardSpeed = 5;
+    private float timeToReachFullSpeed = 5;
 
     [SerializeField]
-    private float rotationSpeed = 5;
+    private float lookRotationDegsPerSecond = 5;
+
+    [SerializeField, Min(0)]
+    private float rotationSpeed = 70;
+    [Min(0.01f)] public float slippyScalar = 3;
 
     [SerializeField]
     private float maxForwardSpeed = 50f;
@@ -45,12 +49,13 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     private float minAngle = -45;
     Vector3 _forward;
+    private Vector3 Forward { get { return this._finalRotation * Vector3.forward; } }
     Quaternion _horizontalRotation;
     Quaternion _verticalRotation;
     Quaternion _finalRotation = new Quaternion();
 
     [SerializeField]
-    private Vector3 velocity;
+    private Vector3 velocityDirection;
     private bool groundHit;
     private RaycastHit hit;
     Vector3 lastNormal = Vector3.zero;
@@ -59,7 +64,25 @@ public class PlayerController : MonoBehaviour
     [SerializeField, Min(0)]
     private float distanceFromColliderToCountAsGroundHit = 1.25f;
     private bool countAsGroundHit = false;
-    private State currentState = State.Airborne;
+    private State CurrentState {
+        get {
+            return this._currentState;
+        }
+        set {
+            if (value != this._currentState) {
+                this._currentState = value;
+                switch (value) {
+                    case State.Grounded:
+                        OnGroundedEnter();
+                        break;
+                    case State.Airborne:
+                        OnAirborneEnter();
+                        break;
+                }
+            }
+        }
+    }
+    private State _currentState = State.Airborne;
     private bool isHolding = false;
     private new CapsuleCollider collider;
     private PlayerInputValues inputs;
@@ -88,6 +111,7 @@ public class PlayerController : MonoBehaviour
         this._horizontalRotation = Quaternion.Euler(
             Vector3.up * this.transform.rotation.eulerAngles.y
         );
+        this.transform.rotation = Quaternion.identity;
         this._verticalRotation = Quaternion.Euler(this.transform.right);
         this._forward = transform.forward;
         this._finalRotation = transform.rotation;
@@ -118,7 +142,7 @@ public class PlayerController : MonoBehaviour
         float time = Time.fixedDeltaTime;
 
 
-        if (currentState == State.Grounded) {
+        if (CurrentState == State.Grounded) {
             this.groundHit = Physics.Raycast(
                 transform.position,
                 Vector3.down,
@@ -127,7 +151,7 @@ public class PlayerController : MonoBehaviour
                 collidableLayer
             );
         }
-        else if (currentState == State.Airborne) {
+        else if (CurrentState == State.Airborne) {
             var offset = this._finalRotation * Vector3.forward;
             this.groundHit = Physics.Raycast(
                 transform.position + offset,
@@ -153,37 +177,37 @@ public class PlayerController : MonoBehaviour
         }
 
         if (!groundHit) {
-            currentState = State.Airborne;
+            CurrentState = State.Airborne;
             groundedCooldownTimer.Reset();
             lastNormal = Vector3.zero;
             currentNormal = Vector3.zero;
         }
         else {
-            if (currentState == State.Grounded) {
+            if (CurrentState == State.Grounded) {
                 if (lastNormal != currentNormal) { // currentNormal will always have a value when groundHit is truthy
                     // entering here means the player is trying to move from a surface to a new one or was flying and has now hit a surface
 
                     Vector3 vec = lastNormal == Vector3.zero ? Vector3.up : lastNormal;  // If first time touching ground
                     if (!IsSurfaceClimbable(hit.normal, vec)) {
-                        currentState = State.Airborne;
+                        CurrentState = State.Airborne;
                     }
                 }
             }
-            else if (currentState == State.Airborne) {
+            else if (CurrentState == State.Airborne) {
                 lastNormal = Vector3.zero;
                 currentNormal = Vector3.zero;
                 groundedCooldownTimer.Time += time; // Cooldown until player is able to touch ground again
                 if (groundedCooldownTimer.Expired)
                 {
                     if (countAsGroundHit && IsSurfaceClimbable(hit.normal, Vector3.up)) {
-                        currentState = State.Grounded;
+                        CurrentState = State.Grounded;
                         groundedCooldownTimer.Reset();
                     }
                 }
             }
         }
 
-        switch (this.currentState) {
+        switch (this.CurrentState) {
             case State.Grounded:
                 GroundedState(time);
                 break;
@@ -192,36 +216,63 @@ public class PlayerController : MonoBehaviour
                 break;
         }
 
-        this.body.velocity = this.velocity * time;
+        this.body.velocity = this.velocityDirection.normalized * speed * time;
     }
 
+    private void OnGroundedEnter() {
+        this.velocityDirection.y = 0;
+    }
+
+    private void OnAirborneEnter() {
+
+    }
+
+    private float speed;
+    [Min(0)] public float timeToRideInTurnedDirection = 0.3f;
     private void GroundedState(float time)
     {
         HandleHorizontalStateRotation(time);
 
         // Horizontal Velocity
-        float horizontalMagnitude = (this._forward * forwardSpeed + this.velocity).magnitude;
-        this.velocity = this._forward * horizontalMagnitude;
+        this._finalRotation = _horizontalRotation;
+        Vector3 horizontalDirection = _horizontalRotation * Vector3.forward;
+        Quaternion rotationExtra = Quaternion.Euler(
+            Vector3.up * 45 / (0.01f + rotationSpeed) * Mathf.Sign(GetNegativeAngle(velocityDirection, horizontalDirection))
+        );
+        velocityDirection += _horizontalRotation * rotationExtra * Vector3.forward * rotationSpeed * time;
+        if (velocityDirection.magnitude > slippyScalar) {
+            velocityDirection = velocityDirection.normalized * slippyScalar;
+        }
 
-        var vec = new Vector2(this.velocity.x, this.velocity.z);
-        if (vec.magnitude > maxForwardSpeed)
-        {
-            vec.Normalize();
-            this.velocity.x = vec.x * maxForwardSpeed;
-            this.velocity.z = vec.y * maxForwardSpeed;
+        float dot = Vector3.Dot(horizontalDirection.normalized, velocityDirection.normalized);
+        if (dot >= 1 - 0.0001f && rotationSpeed > 0) {
+            velocityDirection = horizontalDirection.normalized;
+        }
+
+        // Speed acceleration
+        speed += time / timeToReachFullSpeed * maxForwardSpeed;
+        if (speed > maxForwardSpeed) {
+            speed = maxForwardSpeed;
         }
 
         if (useGravity && !countAsGroundHit)
         {
-            Vector3 gravity = Vector3.down * this.gravityScale * time;
-            this.body.AddForce(gravity);
+            // Vector3 gravity = Vector3.down * this.gravityScale * time;
+            // this.body.AddForce(gravity);
             // this.velocity.y = this.body.velocity.y == 0 ? 0 : this.body.velocity.y + this.velocity.y;
         }
 
-        if (isHolding)
-        {
-            this.velocity = Vector3.zero;
-        }
+        // if (isHolding)
+        // {
+        //     this.velocity = Vector3.zero;
+        // }
+    }
+
+    private float GetNegativeAngle(Vector3 vectorA, Vector3 vectorB) {
+        float angle = Vector3.Angle(vectorA, vectorB);
+        Vector3 cross = Vector3.Cross(vectorA, vectorB);
+        if (cross.y < 0) angle = -angle;
+        return angle;
     }
 
     private void FlyingState(float time)
@@ -229,15 +280,15 @@ public class PlayerController : MonoBehaviour
         HandleVerticalStateRotation(time);
 
         // Horizontal Velocity
-        float horizontalMagnitude = (this._forward * forwardSpeed + this.velocity).magnitude;
-        this.velocity = this._forward * horizontalMagnitude;
+        float horizontalMagnitude = (this._forward * timeToReachFullSpeed + this.velocityDirection).magnitude;
+        this.velocityDirection = this._forward * horizontalMagnitude;
 
-        var vec = new Vector2(this.velocity.x, this.velocity.z);
+        var vec = new Vector2(this.velocityDirection.x, this.velocityDirection.z);
         if (vec.magnitude > maxForwardSpeed)
         {
             vec.Normalize();
-            this.velocity.x = vec.x * maxForwardSpeed;
-            this.velocity.z = vec.y * maxForwardSpeed;
+            this.velocityDirection.x = vec.x * maxForwardSpeed;
+            this.velocityDirection.z = vec.y * maxForwardSpeed;
         }
 
         if (useGravity && !countAsGroundHit)
@@ -248,7 +299,7 @@ public class PlayerController : MonoBehaviour
 
         if (isHolding)
         {
-            this.velocity = Vector3.zero;
+            this.velocityDirection = Vector3.zero;
         }
     }
 
@@ -256,7 +307,7 @@ public class PlayerController : MonoBehaviour
     {
         // Horizontal Rotation
         Quaternion horizontalDelta = Quaternion.Euler(
-            Vector3.up * inputs.direction.x * rotationSpeed * time
+            Vector3.up * lookRotationDegsPerSecond * time * inputs.direction.x
         );
         this._horizontalRotation = this._horizontalRotation * horizontalDelta;
 
@@ -299,7 +350,7 @@ public class PlayerController : MonoBehaviour
     {
         // Horizontal Rotation
         Quaternion horizontalDelta = Quaternion.Euler(
-            Vector3.up * inputs.direction.x * rotationSpeed * time
+            Vector3.up * inputs.direction.x * lookRotationDegsPerSecond * time
         );
         this._horizontalRotation = this._horizontalRotation * horizontalDelta;
 
@@ -307,7 +358,7 @@ public class PlayerController : MonoBehaviour
         Vector3 verticalDeltaEuler =
             Quaternion.Euler(Vector3.right).eulerAngles
             * inputs.direction.y
-            * this.rotationSpeed
+            * this.lookRotationDegsPerSecond
             * time;
 
         float verticalAngle = (this._verticalRotation.eulerAngles + verticalDeltaEuler).x % 360;
@@ -325,7 +376,7 @@ public class PlayerController : MonoBehaviour
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.red;
-        if (currentState == State.Grounded) {
+        if (CurrentState == State.Grounded) {
             Gizmos.DrawRay(transform.position, Vector3.down * rayDist);
 
             Gizmos.color = Color.blue;
@@ -337,8 +388,10 @@ public class PlayerController : MonoBehaviour
                     this._finalRotation * Quaternion.Euler(0, -angleIncrement * i, 0) * Vector3.forward;
                 Gizmos.DrawRay(transform.position + offset, Vector3.down * (rayDist + rayDistRotExtra));
             }
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawRay(transform.position, velocityDirection);
         }
-        else if (currentState == State.Airborne) {
+        else if (CurrentState == State.Airborne) {
             var offset = this._finalRotation * Vector3.forward;
             Gizmos.DrawRay(transform.position + offset, Vector3.down * (rayDist + offset.y));
         }

@@ -213,14 +213,16 @@ MonoBehaviour:
   useGravity: 1
   steeringMultiplier: 1
   turnPercentage: 1
-  forwardSpeed: 5
-  rotationSpeed: 70
+  timeToReachFullSpeed: 5
+  lookRotationDegsPerSecond: 360
+  rotationSpeed: 22.25
+  slippyScalar: 3.48
   maxForwardSpeed: 300
   gravityScale: 9.82
   airRotationSpeed: 50
   maxAngle: 45
   minAngle: -45
-  velocity: {x: 0, y: 0, z: 0}
+  velocityDirection: {x: 0, y: 0, z: 0}
   distanceFromColliderToCountAsGroundHit: 0.5
   rayDist: 2.5
   rayDistRotExtra: 0
@@ -228,6 +230,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 64
   maxAngleThingy: 45
+  timeToRideInTurnedDirection: 0.6
 --- !u!1 &8336621076948441103
 GameObject:
   m_ObjectHideFlags: 0

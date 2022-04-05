@@ -1,0 +1,5 @@
+- Overing over ground in grounded state (higher than intended), FIX: implement proper over physics for mesh
+- Only having single in flying state for ground check is flawed
+
+
+[SWITCH TO USING HALF CIRCLE FOR GROUND CHECK]

@@ -49,6 +49,12 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     private float _minAirborneAngle = -135;
 
+    [SerializeField]
+    private float followGroundRotationAnglePerSecond = 15f;
+
+    [SerializeField]
+    private int rotationRayCount = 10;
+
     [Header("Ground Check")]
     [SerializeField] private float _groundSphereOffset = 0.5f;
     [SerializeField] private float _groundSphereExtraRadius = -0.1f;
@@ -366,10 +372,9 @@ public class PlayerController : MonoBehaviour
         _horizontalRotation = _horizontalRotation * horizontalDelta;
 
         Vector3 averageNormal = _groundHitInfo.normal;
-        int count = 5;
-        float angleIncrement = 360f / count;
+        float angleIncrement = 360f / rotationRayCount;
         int incrementCount = 1;
-        for (int i = 0; i < count; i++)
+        for (int i = 0; i < rotationRayCount; i++)
         {
             RaycastHit rayData;
             var offset =
@@ -395,10 +400,10 @@ public class PlayerController : MonoBehaviour
         averageNormal /= incrementCount;
 
         Vector3 upVec = _groundHit ? averageNormal : Vector3.up;
-        _verticalRotation = Quaternion.FromToRotation(Vector3.up, upVec);
+        // TODO: Increase speed the larger the angle diff is
+        _verticalRotation = Quaternion.RotateTowards(_verticalRotation, Quaternion.FromToRotation(Vector3.up, upVec), followGroundRotationAnglePerSecond * time);
         _finalRotation = _verticalRotation * _horizontalRotation;
         _forward = _finalRotation * Vector3.forward;
-        _mesh.rotation = _finalRotation;
     }
 
     private void HandleVerticalStateRotation(float time)
@@ -430,14 +435,15 @@ public class PlayerController : MonoBehaviour
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position + Vector3.down * (_groundSphereOffset + _collider.height / 2), _collider.radius + _groundSphereExtraRadius);
+
         if (CurrentState == PlayerPhysicsState.Grounded)
         {
             Gizmos.DrawRay(transform.position, Vector3.down * _groundRayDistance);
 
             Gizmos.color = Color.blue;
-            int count = 5;
-            float angleIncrement = 360f / count;
-            for (int i = 0; i < count; i++)
+            float angleIncrement = 360f / rotationRayCount;
+            for (int i = 0; i < rotationRayCount; i++)
             {
                 var offset =
                     _finalRotation

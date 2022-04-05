@@ -178,17 +178,22 @@ public class PlayerController : MonoBehaviour
         _verticalRotation = Quaternion.Euler(this.transform.right);
         _forward = transform.forward;
         _finalRotation = transform.rotation;
+        _meshPivotPoint = _mesh.position - transform.position;
     }
 
     private void OnGroundedEnter()
     {
         _velocityDirection.y = 0;
+        _gravitySpeed = 0;
+        _velocityDirection = Vector3.zero;
     }
 
     private void OnAirborneEnter()
     {
         var euler = _mesh.rotation.eulerAngles;
         _verticalRotation = Quaternion.Euler(euler.x, 0, euler.z);
+        _gravitySpeed = 0;
+        _velocityDirection = Vector3.zero;
     }
 
     public void UpdateInputs(PlayerInputValues inputs)
@@ -212,6 +217,15 @@ public class PlayerController : MonoBehaviour
             _groundRayDistance + groundHitOffset.y,
             _collidableLayer
         );
+        // float groundHitOffset = _groundSphereOffset + _collider.height / 2;
+        // _groundHit = Physics.SphereCast(
+        //     transform.position,
+        //     _collider.radius + _groundSphereExtraRadius,
+        //     Vector3.down,
+        //     out _groundHitInfo,
+        //     groundHitOffset,
+        //     _collidableLayer
+        // );
 
         _countAsGroundHit = _groundHit;
         if (_groundHit)
@@ -221,10 +235,29 @@ public class PlayerController : MonoBehaviour
                 _lastNormal = _currentNormal;
                 _currentNormal = _groundHitInfo.normal;
             }
-            var offset = _finalRotation * Vector3.forward;
+            // float offset = _groundSphereOffset + _collider.height / 2;
+            // _countAsGroundHit = Physics.SphereCast(
+            //     transform.position,
+            //     _collider.radius + _groundSphereExtraRadius,
+            //     Vector3.down,
+            //     out _groundHitInfo,
+            //     offset,
+            //     _collidableLayer
+            // );
             _countAsGroundHit =
-                Vector3.Distance(transform.position + offset, _groundHitInfo.point) - _collider.height / 2
+                Vector3.Distance(transform.position + groundHitOffset, _groundHitInfo.point) - _collider.height / 2
                 < this.distanceFromColliderToCountAsGroundHit;
+            // if (!_countAsGroundHit) {
+            //     float offset = _groundSphereOffset + _collider.height / 2;
+            //     _countAsGroundHit = Physics.SphereCast(
+            //         transform.position,
+            //         _collider.radius + _groundSphereExtraRadius,
+            //         Vector3.down,
+            //         out _groundHitInfo,
+            //         offset,
+            //         _collidableLayer
+            //     );
+            // }
         }
 
         HandlePhysicsStateTransitions(time);
@@ -238,6 +271,14 @@ public class PlayerController : MonoBehaviour
                 FlyingState(time);
                 break;
         }
+        _mesh.position = _finalRotation * _meshPivotPoint + transform.position;
+        _mesh.rotation = _finalRotation;
+    }
+
+    static void RotateAround (Transform transform, Vector3 pivotPoint, Quaternion rot)
+    {
+        transform.position = rot * (transform.position - pivotPoint) + pivotPoint;
+        transform.rotation = rot * transform.rotation;
     }
 
     private void HandlePhysicsStateTransitions(float time)
@@ -306,61 +347,43 @@ public class PlayerController : MonoBehaviour
         }
 
         // Speed acceleration
-        _speed += time / _secondsToReachFullSpeed * _maxForwardSpeed;
-        if (_speed > _maxForwardSpeed)
+        _speed += time / _secondsToReachFullGroundSpeed * _maxForwardGroundSpeed;
+        if (_speed > _maxForwardGroundSpeed)
         {
-            _speed = _maxForwardSpeed;
-        }
-
-        if (_useGravity && !_countAsGroundHit)
-        {
-            // Vector3 gravity = Vector3.down * this.gravityScale * time;
-            // this.body.AddForce(gravity);
-            // this.velocity.y = this.body.velocity.y == 0 ? 0 : this.body.velocity.y + this.velocity.y;
+            _speed = _maxForwardGroundSpeed;
         }
 
         // if (isHolding)
         // {
         //     this.velocity = Vector3.zero;
         // }
-        _body.velocity = _verticalRotation * _velocityDirection.normalized * _speed * time;
+
+        Vector3 finalVelocity = _verticalRotation * _velocityDirection.normalized * _speed * time;
+        _body.velocity = finalVelocity;
     }
+
 
     private void FlyingState(float time)
     {
         HandleVerticalStateRotation(time);
 
-        // Horizontal Velocity
-        float horizontalMagnitude =
-            (_forward * _secondsToReachFullSpeed + _velocityDirection).magnitude;
-        _velocityDirection = _forward * horizontalMagnitude;
-
-        var vec = new Vector2(_velocityDirection.x, _velocityDirection.z);
-        if (vec.magnitude > _maxForwardSpeed)
-        {
-            vec.Normalize();
-            _velocityDirection.x = vec.x * _maxForwardSpeed;
-            _velocityDirection.z = vec.y * _maxForwardSpeed;
-        }
-
-        if (_useGravity && !_countAsGroundHit)
-        {
-            Vector3 gravity = Vector3.down * _gravityScale * time;
-            _body.AddForce(gravity);
-        }
+        _velocityDirection = _forward;
 
         // Speed acceleration
-        _speed += time / _secondsToReachFullSpeed * _maxForwardSpeed;
-        if (_speed > _maxForwardSpeed)
+        _speed += time / _secondsToReachFullAirSpeed * _maxForwardAirSpeed;
+        if (_speed > _maxForwardAirSpeed)
         {
-            _speed = _maxForwardSpeed;
+            _speed = _maxForwardAirSpeed;
         }
 
-        if (_inputs.isInteracting)
+        if (_useGravity)
         {
-            _velocityDirection = Vector3.zero;
+            _gravitySpeed += _gravityScale;
         }
-        _body.velocity = _velocityDirection.normalized * _speed * time;
+
+        Vector3 finalVelocity = _velocityDirection.normalized * _speed * time;
+        finalVelocity += Vector3.down * _gravitySpeed * time;
+        _body.velocity = finalVelocity;
     }
 
     private void HandleHorizontalStateRotation(float time)
@@ -429,6 +452,7 @@ public class PlayerController : MonoBehaviour
 
         _finalRotation = Quaternion.LookRotation(rotationDirection);
         _forward = _finalRotation * Vector3.forward;
+    }
 
     private void OnValidate() {
         _body = GetComponent<Rigidbody>();

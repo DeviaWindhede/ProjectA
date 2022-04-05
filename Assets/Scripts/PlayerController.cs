@@ -429,7 +429,10 @@ public class PlayerController : MonoBehaviour
 
         _finalRotation = Quaternion.LookRotation(rotationDirection);
         _forward = _finalRotation * Vector3.forward;
-        _mesh.rotation = _finalRotation;
+
+    private void OnValidate() {
+        _body = GetComponent<Rigidbody>();
+        _collider = GetComponent<CapsuleCollider>();
     }
 
     private void OnDrawGizmos()

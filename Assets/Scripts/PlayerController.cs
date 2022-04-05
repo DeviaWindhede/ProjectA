@@ -17,13 +17,16 @@ public class PlayerController : MonoBehaviour
 
     [Header("Velocity")]
     [SerializeField]
-    private float _secondsToReachFullSpeed = 5;
-
+    private float _secondsToReachFullGroundSpeed = 5;
     [SerializeField]
-    private float _maxForwardSpeed = 50f;
-
+    private float _secondsToReachFullAirSpeed = 0.3f;
+    [SerializeField]
+    private float _maxForwardGroundSpeed = 300f;
+    [SerializeField]
+    private float _maxForwardAirSpeed = 1000f;
     [SerializeField]
     private float _gravityScale = 9.82f;
+    private float _gravitySpeed;
 
     [Header("Rotation")]
     [SerializeField]
@@ -47,6 +50,8 @@ public class PlayerController : MonoBehaviour
     private float _minAirborneAngle = -135;
 
     [Header("Ground Check")]
+    [SerializeField] private float _groundSphereOffset = 0.5f;
+    [SerializeField] private float _groundSphereExtraRadius = -0.1f;
     [SerializeField, Min(0)]
     private float distanceFromColliderToCountAsGroundHit = 1.25f;
 
@@ -85,6 +90,7 @@ public class PlayerController : MonoBehaviour
     private Quaternion _horizontalRotation;
     private Quaternion _verticalRotation;
     private Quaternion _finalRotation = new Quaternion();
+    private Vector3 _meshPivotPoint;
 
     private enum PlayerPhysicsState
     {

@@ -7,8 +7,6 @@ using System.Linq;
 [RequireComponent(typeof(Rigidbody))]
 public class PlayerController : MonoBehaviour
 {
-    private Rigidbody _body;
-
     [SerializeField]
     private Transform _mesh;
 
@@ -31,8 +29,6 @@ public class PlayerController : MonoBehaviour
     [Header("Rotation")]
     [SerializeField]
     private float _lookRotationDegsPerSecond = 5;
-    [SerializeField, Min(0)]
-    private float _timeToRideInTurnedDirection = 0.3f;
 
     [SerializeField, Min(0)]
     private float _rotationSpeed = 70;
@@ -41,7 +37,7 @@ public class PlayerController : MonoBehaviour
     private float _slippinessScale = 3;
 
     [SerializeField]
-    private float _airRotationSpeed = 50f;
+    private float _airRotationSpeed = 50f; // TODO
 
     [SerializeField]
     private float _maxAirborneAngle = 135;
@@ -72,6 +68,7 @@ public class PlayerController : MonoBehaviour
     private PlayerInputValues _inputs;
 
     // Component
+    private Rigidbody _body;
     private CapsuleCollider _collider;
     private bool _groundHit;
     private bool _countAsGroundHit;

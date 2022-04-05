@@ -217,6 +217,8 @@ public class PlayerController : MonoBehaviour
             _groundRayDistance + groundHitOffset.y,
             _collidableLayer
         );
+        // TODO: Add proper sphere ground check (can also probably be used for average normal rotation on ground state)
+        #region Sphere Ground Check TODO
         // float groundHitOffset = _groundSphereOffset + _collider.height / 2;
         // _groundHit = Physics.SphereCast(
         //     transform.position,
@@ -226,6 +228,18 @@ public class PlayerController : MonoBehaviour
         //     groundHitOffset,
         //     _collidableLayer
         // );
+        // if (!_countAsGroundHit) {
+        //     float offset = _groundSphereOffset + _collider.height / 2;
+        //     _countAsGroundHit = Physics.SphereCast(
+        //         transform.position,
+        //         _collider.radius + _groundSphereExtraRadius,
+        //         Vector3.down,
+        //         out _groundHitInfo,
+        //         offset,
+        //         _collidableLayer
+        //     );
+        // }
+        #endregion
 
         _countAsGroundHit = _groundHit;
         if (_groundHit)
@@ -235,29 +249,9 @@ public class PlayerController : MonoBehaviour
                 _lastNormal = _currentNormal;
                 _currentNormal = _groundHitInfo.normal;
             }
-            // float offset = _groundSphereOffset + _collider.height / 2;
-            // _countAsGroundHit = Physics.SphereCast(
-            //     transform.position,
-            //     _collider.radius + _groundSphereExtraRadius,
-            //     Vector3.down,
-            //     out _groundHitInfo,
-            //     offset,
-            //     _collidableLayer
-            // );
             _countAsGroundHit =
                 Vector3.Distance(transform.position + groundHitOffset, _groundHitInfo.point) - _collider.height / 2
                 < this.distanceFromColliderToCountAsGroundHit;
-            // if (!_countAsGroundHit) {
-            //     float offset = _groundSphereOffset + _collider.height / 2;
-            //     _countAsGroundHit = Physics.SphereCast(
-            //         transform.position,
-            //         _collider.radius + _groundSphereExtraRadius,
-            //         Vector3.down,
-            //         out _groundHitInfo,
-            //         offset,
-            //         _collidableLayer
-            //     );
-            // }
         }
 
         HandlePhysicsStateTransitions(time);
@@ -294,8 +288,8 @@ public class PlayerController : MonoBehaviour
         {
             if (CurrentState == PlayerPhysicsState.Grounded)
             {
-                if (_lastNormal != _currentNormal)
-                { // currentNormal will always have a value when groundHit is truthy
+                if (_lastNormal != _currentNormal) // currentNormal will always have a value when groundHit is truthy
+                {
                     // entering here means the player is trying to move from a surface to a new one or was flying and has now hit a surface
                     Vector3 vec = _lastNormal == Vector3.zero ? Vector3.up : _lastNormal; // If first time touching ground
                     if (!IsSurfaceClimbable(_groundHitInfo.normal, vec))
@@ -353,10 +347,10 @@ public class PlayerController : MonoBehaviour
             _speed = _maxForwardGroundSpeed;
         }
 
-        // if (isHolding)
-        // {
-        //     this.velocity = Vector3.zero;
-        // }
+        if (_inputs.isInteracting) // TODO: Implement breaking and charge
+        {
+            _speed = 0;
+        }
 
         Vector3 finalVelocity = _verticalRotation * _velocityDirection.normalized * _speed * time;
         _body.velocity = finalVelocity;

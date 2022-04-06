@@ -29,10 +29,16 @@ public class PlayerController : MonoBehaviour
 
     [Header("Rotation")]
     [SerializeField]
-    private float _lookRotationDegsPerSecond = 90;
+    private float _lookGroundedRotationDegsPerSecond = 90;
 
     [SerializeField]
-    private float _lookAirRotationDegsPerSecond = 80;
+    private float _lookAirHorizontalRotationDegsPerSecond = 90;
+
+    [SerializeField]
+    private float _lookAirVerticalRotationDegsPerSecond = 80;
+
+    [SerializeField, Range(0f, 90f)]
+    private float _lookAirRollRotationMaxRotationAngle = 80;
 
     [SerializeField, Min(0)]
     private float _rotationSpeed = 70;
@@ -51,6 +57,9 @@ public class PlayerController : MonoBehaviour
 
     [SerializeField]
     private float followGroundRotationAnglePerSecond = 15f;
+
+    [SerializeField]
+    private float airRollRotationAnglePerSecond = 50f;
 
     [SerializeField]
     private int rotationRayCount = 10;
@@ -97,6 +106,7 @@ public class PlayerController : MonoBehaviour
     }
     private Quaternion _horizontalRotation;
     private Quaternion _verticalRotation;
+    private Quaternion _rollRotation;
     private Quaternion _finalRotation = new Quaternion();
     private Vector3 _meshPivotPoint;
 
@@ -177,6 +187,7 @@ public class PlayerController : MonoBehaviour
             Vector3.up * this.transform.rotation.eulerAngles.y
         );
         this.transform.rotation = Quaternion.identity;
+        _rollRotation = Quaternion.identity;
         _verticalRotation = Quaternion.Euler(this.transform.right);
         _forward = transform.forward;
         _finalRotation = transform.rotation;
@@ -193,7 +204,8 @@ public class PlayerController : MonoBehaviour
     private void OnAirborneEnter()
     {
         var euler = _mesh.rotation.eulerAngles;
-        _verticalRotation = Quaternion.Euler(euler.x, 0, euler.z);
+        _verticalRotation = Quaternion.Euler(euler.x, 0, 0);
+        _rollRotation = Quaternion.Euler(0, 0, euler.z);
         _gravitySpeed = 0;
         _velocityDirection = Vector3.zero;
     }
@@ -356,7 +368,7 @@ public class PlayerController : MonoBehaviour
     {
         // Horizontal Rotation
         Quaternion horizontalDelta = Quaternion.Euler(
-            Vector3.up * _lookRotationDegsPerSecond * time * _inputs.direction.x
+            Vector3.up * _lookGroundedRotationDegsPerSecond * time * _inputs.direction.x
         );
         _horizontalRotation = _horizontalRotation * horizontalDelta;
 
@@ -422,20 +434,26 @@ public class PlayerController : MonoBehaviour
     {
         // Horizontal Rotation
         Quaternion horizontalDelta = Quaternion.Euler(
-            Vector3.up * _inputs.direction.x * _lookRotationDegsPerSecond * time
+            Vector3.up * _inputs.direction.x * _lookAirHorizontalRotationDegsPerSecond * time
         );
         _horizontalRotation = _horizontalRotation * horizontalDelta;
 
+        // TODO: Make roll rotation dependant on airfriction
+        _rollRotation = Quaternion.RotateTowards(
+            _rollRotation,
+            Quaternion.Euler(Vector3.forward * _lookAirRollRotationMaxRotationAngle * -_inputs.direction.x),
+            airRollRotationAnglePerSecond * time
+        );
+
         // Vertical Rotation
-        Quaternion deltaRotation = Quaternion.Euler(Vector3.right * _lookAirRotationDegsPerSecond * _inputs.direction.y * time);
+        Quaternion deltaRotation = Quaternion.Euler(Vector3.right * _lookAirVerticalRotationDegsPerSecond * _inputs.direction.y * time);
         float angle = 90 - Vector3.Angle(_verticalRotation * deltaRotation * Vector3.forward, Vector3.up);
 
         if (angle <= -_minAirborneAngle) _verticalRotation = Quaternion.Euler(Vector3.right * _minAirborneAngle);
         else if (angle >= _maxAirborneAngle) _verticalRotation = Quaternion.Euler(Vector3.right * -_maxAirborneAngle);
         else _verticalRotation = _verticalRotation * deltaRotation;
 
-
-        _finalRotation = _horizontalRotation * _verticalRotation;
+        _finalRotation = _horizontalRotation * _verticalRotation * _rollRotation;
         _forward = _finalRotation * Vector3.forward;
     }
 
@@ -474,7 +492,5 @@ public class PlayerController : MonoBehaviour
             var offset = _finalRotation * Vector3.forward;
             Gizmos.DrawRay(transform.position + offset, Vector3.down * (_groundRayDistance + offset.y));
         }
-        Gizmos.color = Color.black;
-        Gizmos.DrawRay(transform.position, _mesh.transform.forward * 5);
     }
 }

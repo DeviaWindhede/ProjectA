@@ -217,14 +217,17 @@ MonoBehaviour:
   _maxForwardGroundSpeed: 300
   _maxForwardAirSpeed: 700
   _gravityScale: 3.18
-  _lookRotationDegsPerSecond: 360
-  _lookAirRotationDegsPerSecond: 360
-  _rotationSpeed: 22
-  _slippinessScale: 3
+  _lookGroundedRotationDegsPerSecond: 90
+  _lookAirHorizontalRotationDegsPerSecond: 90
+  _lookAirVerticalRotationDegsPerSecond: 80
+  _lookAirRollRotationMaxRotationAngle: 45
+  _rotationSpeed: 5
+  _slippinessScale: 1
   _airRotationSpeed: 50
   _maxAirborneAngle: 80
   _minAirborneAngle: 55
   followGroundRotationAnglePerSecond: 110
+  airRollRotationAnglePerSecond: 360
   rotationRayCount: 10
   _groundSphereOffset: 0.15
   _groundSphereExtraRadius: -0.05

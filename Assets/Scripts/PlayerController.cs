@@ -167,18 +167,6 @@ public class PlayerController : MonoBehaviour
             angle = -angle;
         return angle;
     }
-
-    private void log(params System.Object[] arguments)
-    {
-        string finalString = string.Empty;
-        for (int i = 0; i < arguments.Length; i++)
-        {
-            finalString += arguments[i];
-            if (i != arguments.Length - 1)
-                finalString += " , ";
-        }
-        Debug.Log(finalString);
-    }
     #endregion
 
     // Start is called before the first frame update
@@ -361,7 +349,7 @@ public class PlayerController : MonoBehaviour
             _speed = _maxForwardGroundSpeed;
         }
 
-        if (_inputs.isInteracting) // TODO: Implement breaking and charge
+        if (_inputs.isCharging) // TODO: Implement breaking and charge
         {
             _speed = 0;
         }
@@ -451,7 +439,6 @@ public class PlayerController : MonoBehaviour
         // Horizontal Rotation
         float reductionAngle = Mathf.Sign(angle) >= 0 ? _maxAirborneAngle : -_minAirborneAngle;
         float reductionMultiplier = _lookAirMaxRotationalBasedSpeedMultiplier + (1 - _lookAirMaxRotationalBasedSpeedMultiplier) * (1 - angle / reductionAngle);
-        log(angle);
         Quaternion horizontalDelta = Quaternion.Euler(
             Vector3.up * _inputs.direction.x * _lookAirHorizontalRotationDegsPerSecond * time * reductionMultiplier
         );

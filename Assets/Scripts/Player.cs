@@ -8,58 +8,78 @@ using static HelperFunctions;
 public struct PlayerInputValues
 {
     public Vector2 direction;
-    public bool isInteracting;
+    public bool isCharging;
+    public bool isBreaking;
 }
 
 public interface IPlayerInputCallbacks
 {
     void MoveCallback(Vector2 input);
-    void InteractCallback(bool value);
+    void ChargeCallback(float value);
+    void BreakCallback(float value);
 }
 
 public class PlayerInputActionMapping
 {
-    private InputActionMap inputActions;
-    private IPlayerInputCallbacks playerInput;
-    private InputAction actionMove;
-    private InputAction actionInteract;
+    private InputActionMap _inputActions;
+    private IPlayerInputCallbacks _playerInput;
+    private InputAction _actionMove;
+    private InputAction _actionCharge;
+    private InputAction _actionBreak;
 
     public PlayerInputActionMapping(InputActionMap actionMap)
     {
-        this.inputActions = actionMap;
-        this.actionMove = actionMap.FindAction("Move", true);
-        this.actionInteract = actionMap.FindAction("Interact", true);
+        this._inputActions = actionMap;
+        this._actionMove = actionMap.FindAction("Move", true);
+        this._actionCharge = actionMap.FindAction("Charge", true);
+        this._actionBreak = actionMap.FindAction("Break", true);
     }
 
     public void Subscribe(IPlayerInputCallbacks input)
     {
         this.Unsubscribe();
-        this.playerInput = input;
+        this._playerInput = input;
 
-        actionMove.Enable();
-        actionMove.performed += context => playerInput.MoveCallback(context.ReadValue<Vector2>());
-        actionMove.canceled += context => playerInput.MoveCallback(context.ReadValue<Vector2>());
+        _actionMove.Enable();
+        _actionMove.performed += context => _playerInput.MoveCallback(context.ReadValue<Vector2>());
+        _actionMove.canceled += context => _playerInput.MoveCallback(context.ReadValue<Vector2>());
 
-        actionInteract.Enable();
-        actionInteract.performed += context =>
-            playerInput.InteractCallback(context.ReadValue<bool>());
+        _actionCharge.Enable();
+        _actionCharge.performed += context =>
+            _playerInput.ChargeCallback(context.ReadValue<float>());
+        _actionCharge.canceled += context =>
+            _playerInput.ChargeCallback(context.ReadValue<float>());
+
+        _actionBreak.Enable();
+        _actionBreak.performed += context =>
+            _playerInput.BreakCallback(context.ReadValue<float>());
+        _actionBreak.canceled += context =>
+            _playerInput.BreakCallback(context.ReadValue<float>());
     }
 
     public void Unsubscribe()
     {
-        if (this.playerInput != null)
+        if (this._playerInput != null)
         {
-            actionMove.performed -= context =>
-                playerInput.MoveCallback(context.ReadValue<Vector2>());
-            actionMove.canceled -= context =>
-                playerInput.MoveCallback(context.ReadValue<Vector2>());
-            actionMove.Disable();
+            _actionMove.performed -= context =>
+                _playerInput.MoveCallback(context.ReadValue<Vector2>());
+            _actionMove.canceled -= context =>
+                _playerInput.MoveCallback(context.ReadValue<Vector2>());
+            _actionMove.Disable();
 
-            actionInteract.performed -= context =>
-                playerInput.InteractCallback(context.ReadValue<bool>());
-            actionInteract.Disable();
+            _actionCharge.performed -= context =>
+                _playerInput.ChargeCallback(context.ReadValue<float>());
+            _actionCharge.canceled -= context =>
+                _playerInput.ChargeCallback(context.ReadValue<float>());
+            _actionCharge.Disable();
 
-            this.playerInput = null;
+            _actionBreak.performed -= context =>
+                _playerInput.BreakCallback(context.ReadValue<float>());
+            _actionBreak.canceled -= context =>
+                _playerInput.BreakCallback(context.ReadValue<float>());
+            _actionBreak.Disable();
+
+            this._playerInput = null;
         }
     }
 }
@@ -103,7 +123,7 @@ public class Player : MonoBehaviour, IPlayerInputCallbacks
     {
         inputs = new PlayerInputValues();
         inputs.direction = Vector2.zero;
-        inputs.isInteracting = false;
+        inputs.isCharging = false;
         InputManager inputManager = GameObject.Find("InputManager").GetComponent<InputManager>();
         PlayerInput playerInput = inputManager.GetPlayerInput(this.playerIndex);
 
@@ -141,11 +161,16 @@ public class Player : MonoBehaviour, IPlayerInputCallbacks
         this.UpdateControllerInput();
     }
 
-    public void InteractCallback(bool value)
+    public void ChargeCallback(float value)
     {
-        this.inputs.isInteracting = value;
+        this.inputs.isCharging = value > 0;
         this.UpdateControllerInput();
-        Debug.Log("Interact!");
+    }
+
+    public void BreakCallback(float value)
+    {
+        this.inputs.isBreaking = value > 0;
+        this.UpdateControllerInput();
     }
 
     private void OnDestroy()

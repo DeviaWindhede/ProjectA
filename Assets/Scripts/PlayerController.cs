@@ -349,6 +349,7 @@ public class PlayerController : MonoBehaviour
         }
 
         // Speed acceleration
+        // TODO: Make acceleration non-linear
         _speed += time / _secondsToReachFullGroundSpeed * _maxForwardGroundSpeed;
         if (_speed > _maxForwardGroundSpeed)
         {
@@ -414,6 +415,7 @@ public class PlayerController : MonoBehaviour
         _velocityDirection = _forward;
 
         // Speed acceleration
+        // TODO: Make acceleration non-linear
         _speed += time / _secondsToReachFullAirSpeed * _maxForwardAirSpeed;
         if (_speed > _maxForwardAirSpeed)
         {

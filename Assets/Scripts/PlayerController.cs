@@ -17,18 +17,22 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     private float _secondsToReachFullGroundSpeed = 5;
     [SerializeField]
-    private float _secondsToReachFullAirSpeed = 0.3f;
+    private float _secondsToReachFullAirSpeed = 0.75f;
+    [SerializeField]
+    private float _secondsUntilGravity = 0.75f;
     [SerializeField]
     private float _maxForwardGroundSpeed = 300f;
     [SerializeField]
     private float _maxForwardAirSpeed = 1000f;
     [SerializeField]
     private float _gravityScale = 9.82f;
-    private float _gravitySpeed;
 
     [Header("Rotation")]
     [SerializeField]
-    private float _lookRotationDegsPerSecond = 5;
+    private float _lookRotationDegsPerSecond = 90;
+
+    [SerializeField]
+    private float _lookAirRotationDegsPerSecond = 80;
 
     [SerializeField, Min(0)]
     private float _rotationSpeed = 70;
@@ -39,11 +43,11 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     private float _airRotationSpeed = 50f; // TODO
 
-    [SerializeField]
-    private float _maxAirborneAngle = 135;
+    [SerializeField, Range(0f, 80f)]
+    private float _maxAirborneAngle = 45;
 
-    [SerializeField]
-    private float _minAirborneAngle = -135;
+    [SerializeField, Range(0f, 80f)]
+    private float _minAirborneAngle = 45;
 
     [SerializeField]
     private float followGroundRotationAnglePerSecond = 15f;
@@ -82,6 +86,7 @@ public class PlayerController : MonoBehaviour
 
     // Velocity
     private float _speed;
+    private float _gravitySpeed;
     private Vector3 _velocityDirection;
 
     // Rotation
@@ -266,12 +271,6 @@ public class PlayerController : MonoBehaviour
         _mesh.rotation = _finalRotation;
     }
 
-    static void RotateAround (Transform transform, Vector3 pivotPoint, Quaternion rot)
-    {
-        transform.position = rot * (transform.position - pivotPoint) + pivotPoint;
-        transform.rotation = rot * transform.rotation;
-    }
-
     private void HandlePhysicsStateTransitions(float time)
     {
         if (!_groundHit)
@@ -353,30 +352,6 @@ public class PlayerController : MonoBehaviour
         _body.velocity = finalVelocity;
     }
 
-
-    private void FlyingState(float time)
-    {
-        HandleVerticalStateRotation(time);
-
-        _velocityDirection = _forward;
-
-        // Speed acceleration
-        _speed += time / _secondsToReachFullAirSpeed * _maxForwardAirSpeed;
-        if (_speed > _maxForwardAirSpeed)
-        {
-            _speed = _maxForwardAirSpeed;
-        }
-
-        if (_useGravity)
-        {
-            _gravitySpeed += _gravityScale;
-        }
-
-        Vector3 finalVelocity = _velocityDirection.normalized * _speed * time;
-        finalVelocity += Vector3.down * _gravitySpeed * time;
-        _body.velocity = finalVelocity;
-    }
-
     private void HandleHorizontalStateRotation(float time)
     {
         // Horizontal Rotation
@@ -420,6 +395,29 @@ public class PlayerController : MonoBehaviour
         _forward = _finalRotation * Vector3.forward;
     }
 
+    private void FlyingState(float time)
+    {
+        HandleVerticalStateRotation(time);
+
+        _velocityDirection = _forward;
+
+        // Speed acceleration
+        _speed += time / _secondsToReachFullAirSpeed * _maxForwardAirSpeed;
+        if (_speed > _maxForwardAirSpeed)
+        {
+            _speed = _maxForwardAirSpeed;
+        }
+
+        if (_useGravity)
+        {
+            _gravitySpeed += _gravityScale;
+        }
+
+        Vector3 finalVelocity = _velocityDirection.normalized * _speed * time;
+        finalVelocity += Vector3.down * _gravitySpeed * time;
+        _body.velocity = finalVelocity;
+    }
+
     private void HandleVerticalStateRotation(float time)
     {
         // Horizontal Rotation
@@ -428,20 +426,16 @@ public class PlayerController : MonoBehaviour
         );
         _horizontalRotation = _horizontalRotation * horizontalDelta;
 
-        // Vertical Direction Handling (This would probably be easier with proper Quaternion calculations)
-        Vector3 verticalDeltaEuler =
-            Quaternion.Euler(Vector3.right).eulerAngles
-            * _inputs.direction.y
-            * _lookRotationDegsPerSecond
-            * time;
-        float verticalAngle = (_verticalRotation.eulerAngles + verticalDeltaEuler).x % 360;
-        if (verticalAngle < _minAirborneAngle + 180 || verticalAngle > _maxAirborneAngle + 180)
-            _verticalRotation.eulerAngles =
-                _verticalRotation.eulerAngles + verticalDeltaEuler;
+        // Vertical Rotation
+        Quaternion deltaRotation = Quaternion.Euler(Vector3.right * _lookAirRotationDegsPerSecond * _inputs.direction.y * time);
+        float angle = 90 - Vector3.Angle(_verticalRotation * deltaRotation * Vector3.forward, Vector3.up);
 
-        Vector3 rotationDirection = _horizontalRotation * _verticalRotation * Vector3.forward;
+        if (angle <= -_minAirborneAngle) _verticalRotation = Quaternion.Euler(Vector3.right * _minAirborneAngle);
+        else if (angle >= _maxAirborneAngle) _verticalRotation = Quaternion.Euler(Vector3.right * -_maxAirborneAngle);
+        else _verticalRotation = _verticalRotation * deltaRotation;
 
-        _finalRotation = Quaternion.LookRotation(rotationDirection);
+
+        _finalRotation = _horizontalRotation * _verticalRotation;
         _forward = _finalRotation * Vector3.forward;
     }
 

@@ -210,19 +210,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _mesh: {fileID: 5232675846030945889}
-  _useGravity: 1
+  _useGravity: 0
   _secondsToReachFullGroundSpeed: 5
   _secondsToReachFullAirSpeed: 0.3
+  _secondsUntilGravity: 0.75
   _maxForwardGroundSpeed: 300
   _maxForwardAirSpeed: 700
   _gravityScale: 3.18
   _lookRotationDegsPerSecond: 360
-  _timeToRideInTurnedDirection: 0.6
+  _lookAirRotationDegsPerSecond: 360
   _rotationSpeed: 22
   _slippinessScale: 3
   _airRotationSpeed: 50
-  _maxAirborneAngle: 135
-  _minAirborneAngle: -135
+  _maxAirborneAngle: 80
+  _minAirborneAngle: 55
+  followGroundRotationAnglePerSecond: 110
+  rotationRayCount: 10
   _groundSphereOffset: 0.15
   _groundSphereExtraRadius: -0.05
   distanceFromColliderToCountAsGroundHit: 1.3
@@ -232,7 +235,6 @@ MonoBehaviour:
   _collidableLayer:
     serializedVersion: 2
     m_Bits: 64
-  followGroundRotationAnglePerSecond: 110
 --- !u!1 &8336621076948441103
 GameObject:
   m_ObjectHideFlags: 0

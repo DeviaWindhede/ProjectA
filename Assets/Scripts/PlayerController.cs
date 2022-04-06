@@ -40,6 +40,9 @@ public class PlayerController : MonoBehaviour
     [SerializeField, Range(0f, 90f)]
     private float _lookAirRollRotationMaxRotationAngle = 80;
 
+    [SerializeField, Range(0f, 1f)]
+    private float _lookAirMaxRotationalBasedSpeedMultiplier = 0.5f;
+
     [SerializeField, Min(0)]
     private float _rotationSpeed = 70;
 
@@ -199,6 +202,7 @@ public class PlayerController : MonoBehaviour
         _velocityDirection.y = 0;
         _gravitySpeed = 0;
         _velocityDirection = Vector3.zero;
+        _verticalRotation = Quaternion.identity;
     }
 
     private void OnAirborneEnter()
@@ -434,19 +438,6 @@ public class PlayerController : MonoBehaviour
 
     private void HandleVerticalStateRotation(float time)
     {
-        // Horizontal Rotation
-        Quaternion horizontalDelta = Quaternion.Euler(
-            Vector3.up * _inputs.direction.x * _lookAirHorizontalRotationDegsPerSecond * time
-        );
-        _horizontalRotation = _horizontalRotation * horizontalDelta;
-
-        // TODO: Make roll rotation dependant on airfriction
-        _rollRotation = Quaternion.RotateTowards(
-            _rollRotation,
-            Quaternion.Euler(Vector3.forward * _lookAirRollRotationMaxRotationAngle * -_inputs.direction.x),
-            airRollRotationAnglePerSecond * time
-        );
-
         // Vertical Rotation
         Quaternion deltaRotation = Quaternion.Euler(Vector3.right * _lookAirVerticalRotationDegsPerSecond * _inputs.direction.y * time);
         float angle = 90 - Vector3.Angle(_verticalRotation * deltaRotation * Vector3.forward, Vector3.up);
@@ -454,6 +445,24 @@ public class PlayerController : MonoBehaviour
         if (angle <= -_minAirborneAngle) _verticalRotation = Quaternion.Euler(Vector3.right * _minAirborneAngle);
         else if (angle >= _maxAirborneAngle) _verticalRotation = Quaternion.Euler(Vector3.right * -_maxAirborneAngle);
         else _verticalRotation = _verticalRotation * deltaRotation;
+
+
+        // Horizontal Rotation
+        float reductionAngle = Mathf.Sign(angle) >= 0 ? _maxAirborneAngle : -_minAirborneAngle;
+        float reductionMultiplier = _lookAirMaxRotationalBasedSpeedMultiplier + (1 - _lookAirMaxRotationalBasedSpeedMultiplier) * (1 - angle / reductionAngle);
+        log(angle);
+        Quaternion horizontalDelta = Quaternion.Euler(
+            Vector3.up * _inputs.direction.x * _lookAirHorizontalRotationDegsPerSecond * time * reductionMultiplier
+        );
+        _horizontalRotation = _horizontalRotation * horizontalDelta;
+
+        // Roll Rotation
+        // TODO: Make roll rotation dependant on airfriction
+        _rollRotation = Quaternion.RotateTowards(
+            _rollRotation,
+            Quaternion.Euler(Vector3.forward * _lookAirRollRotationMaxRotationAngle * -_inputs.direction.x * reductionMultiplier),
+            airRollRotationAnglePerSecond * time
+        );
 
         _finalRotation = _horizontalRotation * _verticalRotation * _rollRotation;
         _forward = _finalRotation * Vector3.forward;

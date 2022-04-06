@@ -210,17 +210,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _mesh: {fileID: 5232675846030945889}
-  _useGravity: 0
+  _useGravity: 1
   _secondsToReachFullGroundSpeed: 5
   _secondsToReachFullAirSpeed: 0.3
   _secondsUntilGravity: 0.75
   _maxForwardGroundSpeed: 300
   _maxForwardAirSpeed: 700
-  _gravityScale: 3.18
+  _gravityScale: 1.5
   _lookGroundedRotationDegsPerSecond: 90
   _lookAirHorizontalRotationDegsPerSecond: 90
   _lookAirVerticalRotationDegsPerSecond: 80
   _lookAirRollRotationMaxRotationAngle: 45
+  _lookAirMaxRotationalBasedSpeedMultiplier: 0.3
   _rotationSpeed: 5
   _slippinessScale: 1
   _airRotationSpeed: 50

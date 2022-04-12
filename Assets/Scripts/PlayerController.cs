@@ -123,7 +123,7 @@ public class PlayerController : MonoBehaviour
     // Component
     private Rigidbody _body;
     private CapsuleCollider _collider;
-    private PlayerCamera _camera;
+    private PlayerUIHandler _camera;
     private bool _groundHit;
     private bool _countAsGroundHit;
     private RaycastHit _groundHitInfo;
@@ -238,7 +238,7 @@ public class PlayerController : MonoBehaviour
         _camera = GameObject
             .FindObjectOfType<CameraManager>()
             .GetCamera(playerIndex)
-            .GetComponent<PlayerCamera>();
+            .GetComponent<PlayerUIHandler>();
     }
 
     private void OnGroundedEnter()

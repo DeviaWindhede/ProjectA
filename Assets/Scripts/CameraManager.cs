@@ -39,7 +39,7 @@ public class CameraManager : MonoBehaviour
             camera.layer = cullingMask;
             player.GetFollowVirtualCamera.layer = cullingMask;
 
-            camera.GetComponent<PlayerCamera>().SetPlayer(player);
+            camera.GetComponent<PlayerUIHandler>().SetPlayer(player);
 
             _cameras.Add(camera);
         }
@@ -52,6 +52,6 @@ public class CameraManager : MonoBehaviour
 
     public GameObject GetCamera(int playerIndex)
     {
-        return _cameras.Find(x => x.GetComponent<PlayerCamera>().PlayerIndex == playerIndex);
+        return _cameras.Find(x => x.GetComponent<PlayerUIHandler>().PlayerIndex == playerIndex);
     }
 }

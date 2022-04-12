@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class PlayerCamera : MonoBehaviour
+public class PlayerUIHandler : MonoBehaviour
 {
     [SerializeField]
     private Color _chargeColor;

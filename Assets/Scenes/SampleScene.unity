@@ -678,7 +678,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2dbbd2ecf10e90748906d8630076d1f6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerCameraPrefab: {fileID: 1479909467845954968, guid: cefff554f679a4c4489207b695370759,
+  _playerCameraPrefab: {fileID: 1479909467845954968, guid: cefff554f679a4c4489207b695370759,
     type: 3}
 --- !u!4 &771236863
 Transform:

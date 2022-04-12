@@ -4,29 +4,34 @@ using UnityEngine;
 
 public class CameraManager : MonoBehaviour
 {
-    private Rect topHalf = new Rect(0, 0.5f, 1, 1);
-    private Rect bottomHalf = new Rect(0, -0.5f, 1, 1);
-    private Rect topLeft = new Rect(-0.5f, 0.5f, 1, 1);
-    private Rect topRight = new Rect(0.5f, 0.5f, 1, 1);
-    private Rect bottomLeft = new Rect(-0.5f, -0.5f, 1, 1);
-    private Rect bottomRight = new Rect(0.5f, -0.5f, 1, 1);
-    private List<Rect[]> sizes;
-
     public const int PLAYER_CAMERA_BASE_LAYER = 9;
-    [SerializeField] private GameObject playerCameraPrefab;
-    private List<Camera> cameras;
+
+    [SerializeField]
+    private GameObject _playerCameraPrefab;
+
+    private Rect _topHalf = new Rect(0, 0.5f, 1, 1);
+    private Rect _bottomHalf = new Rect(0, -0.5f, 1, 1);
+    private Rect _topLeft = new Rect(-0.5f, 0.5f, 1, 1);
+    private Rect _topRight = new Rect(0.5f, 0.5f, 1, 1);
+    private Rect _bottomLeft = new Rect(-0.5f, -0.5f, 1, 1);
+    private Rect _bottomRight = new Rect(0.5f, -0.5f, 1, 1);
+    private List<Rect[]> _sizes;
+    private List<GameObject> _cameras;
+
     void Start()
     {
-        sizes = new List<Rect[]>() {
-            { new Rect[] { new Rect(0, 0, 1, 1) }},
-            { new Rect[] { topHalf, bottomHalf }},
-            { new Rect[] { topLeft, topRight, bottomHalf }},
-            { new Rect[] { topLeft, topRight, bottomLeft, bottomRight }},
+        _sizes = new List<Rect[]>()
+        {
+            { new Rect[] { new Rect(0, 0, 1, 1) } },
+            { new Rect[] { _topHalf, _bottomHalf } },
+            { new Rect[] { _topLeft, _topRight, _bottomHalf } },
+            { new Rect[] { _topLeft, _topRight, _bottomLeft, _bottomRight } },
         };
 
-        cameras = new List<Camera>();
-        foreach (Player player in GameObject.FindObjectsOfType<Player>()) {
-            GameObject camera = Instantiate(this.playerCameraPrefab, this.transform);
+        _cameras = new List<GameObject>();
+        foreach (Player player in GameObject.FindObjectsOfType<Player>())
+        {
+            GameObject camera = Instantiate(this._playerCameraPrefab, this.transform);
             Camera c = camera.GetComponent<Camera>();
             c.cullingMask = c.cullingMask | 1 << (player.PlayerIndex + PLAYER_CAMERA_BASE_LAYER);
 
@@ -34,10 +39,19 @@ public class CameraManager : MonoBehaviour
             camera.layer = cullingMask;
             player.GetFollowVirtualCamera.layer = cullingMask;
 
-            cameras.Add(camera.GetComponent<Camera>());
+            camera.GetComponent<PlayerCamera>().SetPlayer(player);
+
+            _cameras.Add(camera);
         }
-        for (int i = 0; i < cameras.Count; i++) {
-            cameras[i].rect = sizes[cameras.Count - 1][i];
+        for (int i = 0; i < _cameras.Count; i++)
+        {
+            var cam = _cameras[i].GetComponent<Camera>();
+            cam.rect = _sizes[_cameras.Count - 1][i];
         }
+    }
+
+    public GameObject GetCamera(int playerIndex)
+    {
+        return _cameras.Find(x => x.GetComponent<PlayerCamera>().PlayerIndex == playerIndex);
     }
 }

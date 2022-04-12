@@ -181,8 +181,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f381bcc857d456349a3e57df4a57ba1f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerIndex: 0
-  followVirtualCamera: {fileID: 8336621076948441328}
+  _playerIndex: 0
+  _followVirtualCamera: {fileID: 8336621076948441328}
 --- !u!136 &5698332844854072368
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -239,6 +239,12 @@ MonoBehaviour:
   _collidableLayer:
     serializedVersion: 2
     m_Bits: 64
+  _chargeTime: 1
+  _chargeExpirationTime: 2
+  _chargeBurnoutTime: 3
+  _camera: {fileID: 0}
+  _boostSpeed: 300
+  _timeToStopWhenCharging: 0.5
 --- !u!1 &8336621076948441103
 GameObject:
   m_ObjectHideFlags: 0

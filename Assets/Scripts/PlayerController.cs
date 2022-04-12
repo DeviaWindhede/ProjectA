@@ -80,6 +80,11 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float _groundRotationRayExtraDistance = 0.75f;
     [SerializeField] private LayerMask _collidableLayer;
 
+    [Header("Charge")]
+    [SerializeField] private float _chargeTime = 1f;
+    [SerializeField] private float _chargeExpirationTime = 2f;
+    [SerializeField] private float _chargeBurnoutTime = 3f;
+
 
     // Input
     private PlayerInputValues _inputs;
@@ -87,6 +92,7 @@ public class PlayerController : MonoBehaviour
     // Component
     private Rigidbody _body;
     private CapsuleCollider _collider;
+    private PlayerCamera _camera;
     private bool _groundHit;
     private bool _countAsGroundHit;
     private RaycastHit _groundHitInfo;
@@ -175,6 +181,10 @@ public class PlayerController : MonoBehaviour
         _body = GetComponent<Rigidbody>();
         _collider = GetComponent<CapsuleCollider>();
 
+        _chargeTimer = new Timer(_chargeTime);
+        _expirationTimer = new Timer(_chargeExpirationTime);
+        _chargeBurnoutTimer = new Timer(_chargeBurnoutTime);
+
         _horizontalRotation = Quaternion.Euler(
             Vector3.up * this.transform.rotation.eulerAngles.y
         );
@@ -184,6 +194,12 @@ public class PlayerController : MonoBehaviour
         _forward = transform.forward;
         _finalRotation = transform.rotation;
         _meshPivotPoint = _mesh.position - transform.position;
+    }
+
+    void Start()
+    {
+        int playerIndex = GetComponent<Player>().PlayerIndex;
+        _camera = GameObject.FindObjectOfType<CameraManager>().GetCamera(playerIndex).GetComponent<PlayerCamera>();
     }
 
     private void OnGroundedEnter()
@@ -274,6 +290,7 @@ public class PlayerController : MonoBehaviour
         }
         _mesh.position = _finalRotation * _meshPivotPoint + transform.position;
         _mesh.rotation = _finalRotation;
+        _camera.SetChargeRatio(_chargeTimer.Ratio);
     }
 
     private void HandlePhysicsStateTransitions(float time)
@@ -349,9 +366,12 @@ public class PlayerController : MonoBehaviour
             _speed = _maxForwardGroundSpeed;
         }
 
-        if (_inputs.isCharging) // TODO: Implement breaking and charge
+        if (_inputs.isBreaking) // TODO: Implement breaking
         {
             _speed = 0;
+        }
+        else {
+            OnCharge(time);
         }
 
         Vector3 finalVelocity = _verticalRotation * _velocityDirection.normalized * _speed * time;
@@ -422,8 +442,14 @@ public class PlayerController : MonoBehaviour
 
         Vector3 finalVelocity = _velocityDirection.normalized * _speed * time;
         finalVelocity += Vector3.down * _gravitySpeed * time;
+
+        OnCharge(time);
+        finalVelocity += _extraForce * time;
+
         _body.velocity = finalVelocity;
+        _extraForce = Vector3.zero;
     }
+
 
     private void HandleVerticalStateRotation(float time)
     {
@@ -454,6 +480,56 @@ public class PlayerController : MonoBehaviour
 
         _finalRotation = _horizontalRotation * _verticalRotation * _rollRotation;
         _forward = _finalRotation * Vector3.forward;
+    }
+
+    private Vector3 _extraForce;
+    private Timer _chargeTimer;
+    private Timer _expirationTimer;
+    private Timer _chargeBurnoutTimer;
+    [SerializeField, Min(0)] private float _boostSpeed = 300;
+    [SerializeField, Min(0.01f)] private float _timeToStopWhenCharging = 0.5f;
+    private float _chargeRatio;
+    private void OnCharge(float time) {
+        if (_inputs.isCharging) {
+            switch (this.CurrentState)
+            {
+                case PlayerPhysicsState.Grounded:
+                    _speed *= time / _timeToStopWhenCharging;
+                    if (_speed <= 0.01f) {
+                        _speed = 0;
+                    }
+                    break;
+                case PlayerPhysicsState.Airborne:
+                    // TODO: Rotate star towards forward vec
+
+                    // float angle = Vector3.Angle(_velocityDirection, _forward) // if it is more than forward;
+                    _extraForce = Vector3.down * _speed + Vector3.down * _gravityScale * 2;
+                    break;
+            }
+
+            _chargeTimer += time;
+            _chargeRatio = _chargeTimer.Ratio;
+            if (_chargeTimer.Expired) { // TODO: Move logic to state machine
+                _expirationTimer += time;
+                if (_expirationTimer.Expired) {
+                    _chargeTimer.Time = 0;
+                    _chargeBurnoutTimer += time;
+                    if (_chargeBurnoutTimer.Expired) {
+                        _chargeBurnoutTimer.Reset();
+                        _expirationTimer.Reset();
+                        _chargeTimer.Reset();
+                    }
+                }
+            }
+        }
+        else {
+            if (_chargeTimer.Time != 0) {
+                _speed = _boostSpeed * _chargeRatio;
+                _chargeBurnoutTimer.Reset();
+                _expirationTimer.Reset();
+                _chargeTimer.Reset();
+            }
+        }
     }
 
     private void OnValidate() {

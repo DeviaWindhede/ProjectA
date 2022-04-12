@@ -159,7 +159,6 @@ public class Player : MonoBehaviour, IPlayerInputCallbacks
     {
         _playerController = GetComponent<PlayerController>();
         SetupInputs();
-        UpdatePlayerStats(new PlayerStats());
     }
 
     private void SetupInputs()
@@ -167,6 +166,7 @@ public class Player : MonoBehaviour, IPlayerInputCallbacks
         _inputs = new PlayerInputValues();
         _inputs.direction = Vector2.zero;
         _inputs.isCharging = false;
+        UpdatePlayerStats(new PlayerStats());
         InputManager inputManager = GameObject.Find("InputManager").GetComponent<InputManager>();
         PlayerInput playerInput = inputManager.GetPlayerInput(_playerIndex);
 

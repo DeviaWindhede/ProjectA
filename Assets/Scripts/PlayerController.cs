@@ -14,6 +14,9 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     private bool _useGravity = true;
 
+    [SerializeField]
+    private PlayerStats _playerStats;
+
     [Header("Velocity")]
     [SerializeField]
     private float _secondsToReachFullGroundSpeed = 5;
@@ -265,7 +268,7 @@ public class PlayerController : MonoBehaviour
 
     public void UpdatePlayerStats(PlayerStats stats)
     {
-        // TODO
+        _playerStats = stats;
     }
 
     void FixedUpdate()
@@ -377,6 +380,31 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    private float WeightSpeedMultiplier
+    {
+        get
+        {
+            float weightMultiplier = 1f;
+            if (_playerStats.Weight > 2)
+                weightMultiplier = (30f + (float)_playerStats.Weight) / 32f;
+            else if (_playerStats.Weight < 2)
+                weightMultiplier = (62f + (float)_playerStats.Weight) / 64f;
+            return weightMultiplier;
+        }
+    }
+    private float TopSpeedMultiplier
+    {
+        get
+        {
+            float topSpeedMultiplier = 1f;
+            if (_playerStats.TopSpeed > 2)
+                topSpeedMultiplier = (6f + (float)_playerStats.TopSpeed) / 8f;
+            else if (_playerStats.TopSpeed < 2)
+                topSpeedMultiplier = (18f + (float)_playerStats.TopSpeed) / 20f;
+            return topSpeedMultiplier;
+        }
+    }
+
     private void GroundedState(float time)
     {
         HandleHorizontalStateRotation(time);
@@ -404,15 +432,15 @@ public class PlayerController : MonoBehaviour
 
         // Speed acceleration
         // TODO: Make acceleration non-linear
-        var acceleration = time / _secondsToReachFullGroundSpeed * _maxForwardGroundSpeed;
+
+
+
+        float maxSpeed = _maxForwardGroundSpeed * WeightSpeedMultiplier * TopSpeedMultiplier;
+        var acceleration = time / _secondsToReachFullGroundSpeed * maxSpeed;
         _speed += acceleration;
-        if (_speed > _maxForwardGroundSpeed)
+        if (_speed > maxSpeed)
         {
-            _speed = Mathf.MoveTowards(
-                _speed,
-                _maxForwardGroundSpeed,
-                acceleration * _speedCorrectionFactor
-            );
+            _speed = Mathf.MoveTowards(_speed, maxSpeed, acceleration * _speedCorrectionFactor);
         }
 
         if (_inputs.isBreaking) // TODO: Implement breaking
@@ -483,20 +511,18 @@ public class PlayerController : MonoBehaviour
 
         // Speed acceleration
         // TODO: Make acceleration non-linear
-        var acceleration = time / _secondsToReachFullAirSpeed * _maxForwardAirSpeed;
+        float maxSpeed = _maxForwardAirSpeed * WeightSpeedMultiplier * TopSpeedMultiplier;
+        var acceleration = time / _secondsToReachFullAirSpeed * maxSpeed;
         _speed += acceleration;
-        if (_speed > _maxForwardAirSpeed)
+
+        if (_speed > maxSpeed)
         {
-            _speed = Mathf.MoveTowards(
-                _speed,
-                _maxForwardAirSpeed,
-                acceleration * _speedCorrectionFactor
-            );
+            _speed = Mathf.MoveTowards(_speed, maxSpeed, acceleration * _speedCorrectionFactor);
         }
 
         if (_useGravity)
         {
-            _gravitySpeed += _gravityScale;
+            _gravitySpeed += _gravityScale * WeightSpeedMultiplier * TopSpeedMultiplier;
         }
 
         Vector3 finalVelocity = _velocityDirection.normalized * _speed * time;
@@ -572,9 +598,14 @@ public class PlayerController : MonoBehaviour
             {
                 case PlayerPhysicsState.Grounded:
                     var acceleration =
-                        time / _secondsToReachFullGroundSpeed * _maxForwardGroundSpeed;
+                        time
+                        / _secondsToReachFullGroundSpeed
+                        * _maxForwardGroundSpeed
+                        * WeightSpeedMultiplier
+                        * TopSpeedMultiplier;
+                    // TODO: Use variable
                     _speed -= acceleration; // Remove ground speed addition
-                    _speed = Mathf.MoveTowards(_speed, 0, _groundBreakSpeed * time);
+                    _speed = Mathf.MoveTowards(_speed, 0, acceleration * _groundBreakSpeed);
 
                     if (!_expirationTimer.Expired)
                     {

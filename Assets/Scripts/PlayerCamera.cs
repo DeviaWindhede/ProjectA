@@ -7,26 +7,19 @@ public class PlayerCamera : MonoBehaviour
     private Color _chargeColor;
 
     [SerializeField]
+    private Color _expirationColor;
+
+    [SerializeField]
     private Color _burnoutColor;
 
     [SerializeField]
     private Image _chargeImage;
+
+    [SerializeField]
+    private Image _expirationImage;
     private bool _burnout;
     private float _chargeRatio;
-    private float ChargeRatio
-    {
-        get { return _chargeRatio; }
-        set
-        {
-            if (value > 1)
-                _chargeRatio = 1;
-            else if (value < 0)
-                _chargeRatio = 0;
-            else
-                _chargeRatio = value;
-        }
-    }
-
+    private float _expirationRatio;
     private Player _player;
     public int PlayerIndex
     {
@@ -35,9 +28,14 @@ public class PlayerCamera : MonoBehaviour
 
     public void SetFillRatio(float ratio)
     {
-        ChargeRatio = ratio;
-        _chargeImage.fillAmount = ChargeRatio;
+        _chargeRatio = Mathf.Clamp01(ratio);
+        _chargeImage.fillAmount = _chargeRatio;
     }
+
+    public void SetExpirationRatio(float ratio) {
+        _expirationRatio = Mathf.Clamp01(ratio);
+        _expirationImage.color = new Color(_expirationColor.r, _expirationColor.g, _expirationColor.b, _expirationRatio);
+     }
 
     public void SetBurnout(bool value)
     {

@@ -581,7 +581,7 @@ public class PlayerController : MonoBehaviour
         {
             if (_chargeRatio != 0)
             {
-                _speed += _boostSpeed * _chargeRatio;
+                _speed += _boostSpeed * Mathf.Clamp01(_chargeRatio);
                 _chargeRatio = 0;
                 _chargeBurnoutTimer.Reset();
                 _expirationTimer.Reset();
@@ -589,8 +589,10 @@ public class PlayerController : MonoBehaviour
             }
         }
 
+        _camera.SetExpirationRatio(_expirationTimer.Ratio);
         if (_expirationTimer.Expired)
         {
+            _camera.SetExpirationRatio(0);
             _chargeRatio = 0;
             _chargeBurnoutTimer += time;
             if (_chargeBurnoutTimer.Expired)

@@ -20,7 +20,7 @@ TextureImporter:
     externalNormalMap: 0
     heightScale: 0.25
     normalMapFilter: 0
-  isReadable: 0
+  isReadable: 1
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
@@ -272,33 +272,12 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: GameCube - Kirby Air Ride - Power Up Patches_23
+      name: GameCube - Kirby Air Ride - Power Up Patches_24
       rect:
         serializedVersion: 2
         x: 557
         y: 732
-        width: 14
-        height: 17
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 5baa6f3a0e3f93f4186604b49c912889
-      internalID: -681642331
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: GameCube - Kirby Air Ride - Power Up Patches_24
-      rect:
-        serializedVersion: 2
-        x: 575
-        y: 732
-        width: 14
+        width: 32
         height: 17
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -1569,14 +1548,14 @@ TextureImporter:
       GameCube - Kirby Air Ride - Power Up Patches_100: -858968807
       GameCube - Kirby Air Ride - Power Up Patches_40: -1250359416
       GameCube - Kirby Air Ride - Power Up Patches_61: 2068347414
-      GameCube - Kirby Air Ride - Power Up Patches_37: 77924327
-      GameCube - Kirby Air Ride - Power Up Patches_59: -1478977090
+      GameCube - Kirby Air Ride - Power Up Patches_104: -2111064544
+      GameCube - Kirby Air Ride - Power Up Patches_80: 1692263207
       GameCube - Kirby Air Ride - Power Up Patches_53: -1924333425
       GameCube - Kirby Air Ride - Power Up Patches_86: -1255279651
       GameCube - Kirby Air Ride - Power Up Patches_74: -246042680
       GameCube - Kirby Air Ride - Power Up Patches_94: 269828676
-      GameCube - Kirby Air Ride - Power Up Patches_104: -2111064544
-      GameCube - Kirby Air Ride - Power Up Patches_80: 1692263207
+      GameCube - Kirby Air Ride - Power Up Patches_37: 77924327
+      GameCube - Kirby Air Ride - Power Up Patches_59: -1478977090
       GameCube - Kirby Air Ride - Power Up Patches_21: -252288635
       GameCube - Kirby Air Ride - Power Up Patches_47: 1164760
       GameCube - Kirby Air Ride - Power Up Patches_9: -2127385226

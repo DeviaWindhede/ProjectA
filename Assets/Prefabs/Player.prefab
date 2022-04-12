@@ -129,7 +129,7 @@ GameObject:
   - component: {fileID: 5698332844854072378}
   - component: {fileID: 5698332844854072368}
   - component: {fileID: 5411235343513342598}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Player
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -183,6 +183,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _playerIndex: 0
   _followVirtualCamera: {fileID: 8336621076948441328}
+  _stats:
+    _boost: 0
+    _charge: 0
+    _defence: 0
+    _glide: 0
+    _health: 0
+    _offence: 0
+    _topSpeed: 0
+    _turn: 0
+    _weight: 0
 --- !u!136 &5698332844854072368
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -217,6 +227,7 @@ MonoBehaviour:
   _maxForwardGroundSpeed: 300
   _maxForwardAirSpeed: 700
   _gravityScale: 1.5
+  _speedCorrectionFactor: 10
   _lookGroundedRotationDegsPerSecond: 90
   _lookAirHorizontalRotationDegsPerSecond: 90
   _lookAirVerticalRotationDegsPerSecond: 80
@@ -244,6 +255,7 @@ MonoBehaviour:
   _chargeBurnoutTime: 3
   _boostSpeed: 1000
   _groundBreakSpeed: 300
+  _passiveAirChargeGain: 0.1
 --- !u!1 &8336621076948441103
 GameObject:
   m_ObjectHideFlags: 0

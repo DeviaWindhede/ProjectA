@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // TODO: Implement custom editor
+[RequireComponent(typeof(Rigidbody))]
 public class Pickupable : MonoBehaviour
 {
     // TODO: Implement powerups and ability pickups
@@ -16,9 +17,26 @@ public class Pickupable : MonoBehaviour
     [SerializeField]
     private LayerMask _playerLayer;
 
+    [SerializeField]
+    private float _gravityScale = 2;
+    [SerializeField]
+    private LayerMask _groundLayer;
+
+    private Rigidbody _body;
+    private bool _useGravity = true;
+
+    private void Awake()
+    {
+        _body = GetComponent<Rigidbody>();
+    }
+
     // Gives pickup to player instead of otherway around to prevent edge-case
     private void FixedUpdate()
     {
+        if (_useGravity) {
+            _body.AddForce(Vector3.down * _gravityScale * Time.fixedDeltaTime);
+        }
+
         var hits = Physics.SphereCastAll(
             transform.position,
             _hitboxRadius,
@@ -39,6 +57,13 @@ public class Pickupable : MonoBehaviour
             }
             closestPlayer.UpdatePlayerStats(_stats);
             Destroy(gameObject); // TODO: Animation
+        }
+    }
+
+    private void OnCollisionEnter(Collision other) {
+        if (other.gameObject.layer == _groundLayer) {
+            _useGravity = false;
+            _body.velocity = Vector3.zero;
         }
     }
 

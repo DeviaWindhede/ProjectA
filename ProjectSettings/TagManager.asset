@@ -12,8 +12,8 @@ TagManager:
   - Water
   - UI
   - Collidable
-  - 
-  - 
+  - Pickup
+  - Player
   - P1 Cam
   - P2 Cam
   - P3 Cam

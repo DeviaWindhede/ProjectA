@@ -78,6 +78,7 @@ public class Player : MonoBehaviour, IPlayerInputCallbacks
 
     public void SetPlayerIndex(int value)
     {
+        // TODO: Implement player index replacement protection
         if (value > 0)
             _playerIndex = value;
     }

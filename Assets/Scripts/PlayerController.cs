@@ -108,6 +108,12 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     private float _chargeBurnoutTime = 3f;
 
+    [SerializeField, Min(0)]
+    private float _boostSpeed = 300;
+
+    [SerializeField, Min(0.01f)]
+    private float _groundBreakSpeed = 0.5f;
+
     // Input
     private PlayerInputValues _inputs;
 
@@ -124,6 +130,13 @@ public class PlayerController : MonoBehaviour
     // States
     private PlayerPhysicsState _currentState = PlayerPhysicsState.Airborne;
     private Timer _groundedCooldownTimer = new Timer(0.2f);
+
+    // Charge
+    private Vector3 _chargeForce;
+    private Timer _chargeTimer;
+    private Timer _expirationTimer;
+    private Timer _chargeBurnoutTimer;
+    private float _chargeRatio;
 
     // Velocity
     private float _speed;
@@ -482,10 +495,10 @@ public class PlayerController : MonoBehaviour
         finalVelocity += Vector3.down * _gravitySpeed * time;
 
         OnCharge(time);
-        finalVelocity += _extraForce * time;
+        finalVelocity += _chargeForce * time;
 
         _body.velocity = finalVelocity;
-        _extraForce = Vector3.zero;
+        _chargeForce = Vector3.zero;
     }
 
     private void HandleVerticalStateRotation(float time)
@@ -519,7 +532,7 @@ public class PlayerController : MonoBehaviour
         _horizontalRotation = _horizontalRotation * horizontalDelta;
 
         // Roll Rotation
-        // TODO: Make roll rotation dependant on airfriction
+        // TODO: Make roll rotation dependent on air friction
         _rollRotation = Quaternion.RotateTowards(
             _rollRotation,
             Quaternion.Euler(
@@ -534,18 +547,6 @@ public class PlayerController : MonoBehaviour
         _finalRotation = _horizontalRotation * _verticalRotation * _rollRotation;
         _forward = _finalRotation * Vector3.forward;
     }
-
-    private Vector3 _extraForce;
-    private Timer _chargeTimer;
-    private Timer _expirationTimer;
-    private Timer _chargeBurnoutTimer;
-
-    [SerializeField, Min(0)]
-    private float _boostSpeed = 300;
-
-    [SerializeField, Min(0.01f)]
-    private float _groundBreakSpeed = 0.5f;
-    private float _chargeRatio;
 
     private void OnCharge(float time)
     {
@@ -563,7 +564,7 @@ public class PlayerController : MonoBehaviour
                     // TODO: Rotate star towards forward vec
 
                     // float angle = Vector3.Angle(_velocityDirection, _forward) // if it is more than forward;
-                    _extraForce = Vector3.down * _speed + Vector3.down * _gravityScale * 2;
+                    _chargeForce = Vector3.down * _speed + Vector3.down * _gravityScale * 2;
                     break;
             }
 

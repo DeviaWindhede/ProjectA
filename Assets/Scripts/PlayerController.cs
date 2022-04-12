@@ -114,6 +114,9 @@ public class PlayerController : MonoBehaviour
     [SerializeField, Min(0.01f)]
     private float _groundBreakSpeed = 0.5f;
 
+    [SerializeField, Min(0f)]
+    private float _passiveAirChargeGain = 0.1f;
+
     // Input
     private PlayerInputValues _inputs;
 
@@ -548,17 +551,35 @@ public class PlayerController : MonoBehaviour
         _forward = _finalRotation * Vector3.forward;
     }
 
+    // TODO: Was hastily implemented, refactor this
     private void OnCharge(float time)
     {
+        if (CurrentState == PlayerPhysicsState.Airborne)
+        {
+            _chargeTimer += _passiveAirChargeGain * time;
+            _chargeRatio = _chargeTimer.Ratio;
+            _expirationTimer.Reset();
+        }
+
         if (_inputs.isCharging)
         {
-            switch (this.CurrentState)
+            switch (CurrentState)
             {
                 case PlayerPhysicsState.Grounded:
                     var acceleration =
                         time / _secondsToReachFullGroundSpeed * _maxForwardGroundSpeed;
                     _speed -= acceleration; // Remove ground speed addition
                     _speed = Mathf.MoveTowards(_speed, 0, _groundBreakSpeed * time);
+
+                    if (!_expirationTimer.Expired)
+                    {
+                        _chargeTimer += time;
+                        _chargeRatio = _chargeTimer.Ratio;
+                        if (_chargeTimer.Expired)
+                        { // TODO: Move logic to state machine
+                            _expirationTimer += time;
+                        }
+                    }
                     break;
                 case PlayerPhysicsState.Airborne:
                     // TODO: Rotate star towards forward vec
@@ -567,20 +588,10 @@ public class PlayerController : MonoBehaviour
                     _chargeForce = Vector3.down * _speed + Vector3.down * _gravityScale * 2;
                     break;
             }
-
-            if (!_expirationTimer.Expired)
-            {
-                _chargeTimer += time;
-                _chargeRatio = _chargeTimer.Ratio;
-                if (_chargeTimer.Expired)
-                { // TODO: Move logic to state machine
-                    _expirationTimer += time;
-                }
-            }
         }
         else
         {
-            if (_chargeRatio != 0)
+            if (_chargeRatio != 0 && CurrentState == PlayerPhysicsState.Grounded)
             {
                 _speed += _boostSpeed * Mathf.Clamp01(_chargeRatio);
                 _chargeRatio = 0;

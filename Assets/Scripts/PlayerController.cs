@@ -263,6 +263,11 @@ public class PlayerController : MonoBehaviour
         _inputs = inputs;
     }
 
+    public void UpdatePlayerStats(PlayerStats stats)
+    {
+        // TODO
+    }
+
     void FixedUpdate()
     {
         float time = Time.fixedDeltaTime;

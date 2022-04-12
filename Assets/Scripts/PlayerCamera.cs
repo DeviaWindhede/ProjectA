@@ -32,10 +32,16 @@ public class PlayerCamera : MonoBehaviour
         _chargeImage.fillAmount = _chargeRatio;
     }
 
-    public void SetExpirationRatio(float ratio) {
+    public void SetExpirationRatio(float ratio)
+    {
         _expirationRatio = Mathf.Clamp01(ratio);
-        _expirationImage.color = new Color(_expirationColor.r, _expirationColor.g, _expirationColor.b, _expirationRatio);
-     }
+        _expirationImage.color = new Color(
+            _expirationColor.r,
+            _expirationColor.g,
+            _expirationColor.b,
+            _expirationRatio
+        );
+    }
 
     public void SetBurnout(bool value)
     {

@@ -84,6 +84,29 @@ public struct PlayerStats
         set { _weight = Mathf.Clamp(value, MIN_STAT_VALUE, MAX_STAT_VALUE); }
     }
 
+    public PlayerStats(
+        int boost,
+        int charge,
+        int defence,
+        int glide,
+        int health,
+        int offence,
+        int topSpeed,
+        int turn,
+        int weight
+    )
+    {
+        _boost = boost;
+        _charge = charge;
+        _defence = defence;
+        _glide = glide;
+        _health = health;
+        _offence = offence;
+        _topSpeed = topSpeed;
+        _turn = turn;
+        _weight = weight;
+    }
+
     public static PlayerStats operator +(PlayerStats current, PlayerStats apply)
     {
         current.Boost += apply.Boost;

@@ -242,9 +242,8 @@ MonoBehaviour:
   _chargeTime: 1
   _chargeExpirationTime: 2
   _chargeBurnoutTime: 3
-  _camera: {fileID: 0}
-  _boostSpeed: 300
-  _timeToStopWhenCharging: 0.5
+  _boostSpeed: 1000
+  _groundBreakSpeed: 300
 --- !u!1 &8336621076948441103
 GameObject:
   m_ObjectHideFlags: 0

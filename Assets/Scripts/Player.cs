@@ -170,10 +170,17 @@ public class Player : MonoBehaviour, IPlayerInputCallbacks
         InputManager inputManager = GameObject.Find("InputManager").GetComponent<InputManager>();
         PlayerInput playerInput = inputManager.GetPlayerInput(_playerIndex);
 
-        if (playerInput)
+        if (playerInput != null)
             this.InstantiateInputHandler(playerInput, inputManager);
         else
-            inputManager.onJoin += ctx => InstantiateInputHandler(ctx, inputManager);
+        {
+            inputManager.onJoin += ctx =>
+            {
+                if (ctx.playerIndex == _playerIndex) {
+                    InstantiateInputHandler(ctx, inputManager);
+                }
+            };
+        }
     }
 
     private void UpdateControllerInput()

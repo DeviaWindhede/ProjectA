@@ -188,6 +188,103 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    // Stat scalars
+
+    // Weight multipliers should be equal to half of the primary stat
+    private float WeightSpeedMultiplier
+    {
+        get
+        {
+            float weightMultiplier = 1f;
+            if (_playerStats.Weight > 2)
+                weightMultiplier = (30f + (float)_playerStats.Weight) / 32f;
+            else if (_playerStats.Weight < 2)
+                weightMultiplier = (62f + (float)_playerStats.Weight) / 64f;
+            return weightMultiplier;
+        }
+    }
+
+    // Max speed = 3x
+    // Min speed = 1/5x / 0.2x
+    private float TopSpeedMultiplier
+    {
+        get
+        {
+            float topSpeedMultiplier = 1f;
+            if (_playerStats.TopSpeed > 2)
+                topSpeedMultiplier = (6f + (float)_playerStats.TopSpeed) / 8f;
+            else if (_playerStats.TopSpeed < 2)
+                topSpeedMultiplier = (18f + (float)_playerStats.TopSpeed) / 20f;
+            return topSpeedMultiplier;
+        }
+    }
+
+    // Max charge = 3x
+    // Min charge = 1/5x / 0.2x
+    private float ChargeMultiplier {
+        get {
+            float chargeMultiplier = 1f;
+            if (_playerStats.Charge > 2)
+                chargeMultiplier = (6f + (float)_playerStats.Charge) / 8f;
+            else if (_playerStats.Charge < 2)
+                chargeMultiplier = (18f + (float)_playerStats.Charge) / 20f;
+            return chargeMultiplier;
+        }
+    }
+
+    private float WeightChargeMultiplier
+    {
+        get
+        {
+            float weightMultiplier = 1f;
+            if (_playerStats.Weight > 2)
+                weightMultiplier = (30f + (float)_playerStats.Weight) / 32f;
+            else if (_playerStats.Weight < 2)
+                weightMultiplier = (62f + (float)_playerStats.Weight) / 64f;
+            return weightMultiplier;
+        }
+    }
+
+    // Max glide = 3x
+    // Min glide = 1/5x / 0.2x
+    private float GlideMultiplier {
+        get {
+            float glideMultiplier = 1f;
+            if (_playerStats.Glide > 2)
+                glideMultiplier = (6f + (float)_playerStats.Glide) / 8f;
+            else if (_playerStats.Glide < 2)
+                glideMultiplier = (18f + (float)_playerStats.Glide) / 20f;
+            return glideMultiplier;
+        }
+    }
+    private float WeightGlideMultiplier
+    {
+        get
+        {
+            float weightMultiplier = 1f;
+            if (_playerStats.Weight > 2)
+                weightMultiplier = (30f + (float)_playerStats.Weight) / 32f;
+            else if (_playerStats.Weight < 2)
+                weightMultiplier = (62f + (float)_playerStats.Weight) / 64f;
+            return weightMultiplier;
+        }
+    }
+
+
+    private float WeightSlippynessMultiplier
+    {
+        get
+        {
+            float weightMultiplier = 1f;
+            if (_playerStats.Weight > 2)
+                weightMultiplier = (30f + (float)_playerStats.Weight) / 32f;
+            else if (_playerStats.Weight < 2)
+                weightMultiplier = (62f + (float)_playerStats.Weight) / 64f;
+            return weightMultiplier;
+        }
+    }
+
+
     #region Helpers
     private bool ShouldSlide
     {
@@ -380,31 +477,6 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private float WeightSpeedMultiplier
-    {
-        get
-        {
-            float weightMultiplier = 1f;
-            if (_playerStats.Weight > 2)
-                weightMultiplier = (30f + (float)_playerStats.Weight) / 32f;
-            else if (_playerStats.Weight < 2)
-                weightMultiplier = (62f + (float)_playerStats.Weight) / 64f;
-            return weightMultiplier;
-        }
-    }
-    private float TopSpeedMultiplier
-    {
-        get
-        {
-            float topSpeedMultiplier = 1f;
-            if (_playerStats.TopSpeed > 2)
-                topSpeedMultiplier = (6f + (float)_playerStats.TopSpeed) / 8f;
-            else if (_playerStats.TopSpeed < 2)
-                topSpeedMultiplier = (18f + (float)_playerStats.TopSpeed) / 20f;
-            return topSpeedMultiplier;
-        }
-    }
-
     private void GroundedState(float time)
     {
         HandleHorizontalStateRotation(time);
@@ -511,7 +583,8 @@ public class PlayerController : MonoBehaviour
 
         // Speed acceleration
         // TODO: Make acceleration non-linear
-        float maxSpeed = _maxForwardAirSpeed * WeightSpeedMultiplier * TopSpeedMultiplier;
+        float reductionMultiplier = _lookAirMaxRotationalBasedSpeedMultiplier + (1 - _lookAirMaxRotationalBasedSpeedMultiplier) * airVerticalReductionAngle; // TODO: Add variable to this
+        float maxSpeed = _maxForwardAirSpeed * WeightSpeedMultiplier * TopSpeedMultiplier * reductionMultiplier;
         var acceleration = time / _secondsToReachFullAirSpeed * maxSpeed;
         _speed += acceleration;
 
@@ -522,7 +595,7 @@ public class PlayerController : MonoBehaviour
 
         if (_useGravity)
         {
-            _gravitySpeed += _gravityScale * WeightSpeedMultiplier * TopSpeedMultiplier;
+            _gravitySpeed += _gravityScale * WeightSpeedMultiplier * TopSpeedMultiplier * WeightGlideMultiplier / GlideMultiplier;
         }
 
         Vector3 finalVelocity = _velocityDirection.normalized * _speed * time;
@@ -535,6 +608,7 @@ public class PlayerController : MonoBehaviour
         _chargeForce = Vector3.zero;
     }
 
+    private float airVerticalReductionAngle;
     private void HandleVerticalStateRotation(float time)
     {
         // Vertical Rotation
@@ -553,9 +627,8 @@ public class PlayerController : MonoBehaviour
 
         // Horizontal Rotation
         float reductionAngle = Mathf.Sign(angle) >= 0 ? _maxAirborneAngle : -_minAirborneAngle;
-        float reductionMultiplier =
-            _lookAirMaxRotationalBasedSpeedMultiplier
-            + (1 - _lookAirMaxRotationalBasedSpeedMultiplier) * (1 - angle / reductionAngle);
+        airVerticalReductionAngle = angle / reductionAngle;
+        float reductionMultiplier = _lookAirMaxRotationalBasedSpeedMultiplier + (1 - _lookAirMaxRotationalBasedSpeedMultiplier) * airVerticalReductionAngle;
         Quaternion horizontalDelta = Quaternion.Euler(
             Vector3.up
                 * _inputs.direction.x
@@ -605,11 +678,11 @@ public class PlayerController : MonoBehaviour
                         * TopSpeedMultiplier;
                     // TODO: Use variable
                     _speed -= acceleration; // Remove ground speed addition
-                    _speed = Mathf.MoveTowards(_speed, 0, acceleration * _groundBreakSpeed);
+                    _speed = Mathf.MoveTowards(_speed, 0, acceleration * _groundBreakSpeed * WeightChargeMultiplier);
 
                     if (!_expirationTimer.Expired)
                     {
-                        _chargeTimer += time;
+                        _chargeTimer += time * ChargeMultiplier;
                         _chargeRatio = _chargeTimer.Ratio;
                         if (_chargeTimer.Expired)
                         { // TODO: Move logic to state machine

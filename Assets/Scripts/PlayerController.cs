@@ -582,10 +582,18 @@ public class PlayerController : MonoBehaviour
             _speed = Mathf.MoveTowards(_speed, maxSpeed, acceleration * _speedCorrectionFactor);
         }
 
+        Vector3 finalVelocity = _velocityDirection.normalized * _speed * time;
+        finalVelocity += Vector3.down * WeightGlideMultiplier * time;
+
         _airBorneTimer += time;
         if (_useGravity && _airBorneTimer.Expired)
         {
             _gravitySpeed += _gravityScale;
+
+            // Counteracts upwards velocity
+            if (Mathf.Sign(_velocityDirection.normalized.y) == 1)
+                finalVelocity += Vector3.down * finalVelocity.y;
+
             finalVelocity += Vector3.down * _gravitySpeed * time;
         }
 
@@ -605,11 +613,9 @@ public class PlayerController : MonoBehaviour
         Quaternion deltaRotation = Quaternion.Euler(vertRotationAmount);
         float angle = 90 - Vector3.Angle(_verticalRotation * deltaRotation * Vector3.forward, Vector3.up);
 
-        Quaternion deltaRotation = Quaternion.Euler(
-            Vector3.right * _lookAirVerticalRotationDegsPerSecond * _inputs.direction.y * time
-        );
-        float angle =
-            90 - Vector3.Angle(_verticalRotation * deltaRotation * Vector3.forward, Vector3.up);
+        // Faster decent angle
+        if (angle <= 0 && Mathf.Sign(_inputs.direction.y) == 1)
+            deltaRotation = Quaternion.Euler(vertRotationAmount * 2f);
 
         // Angle cap
         if (angle <= -_minAirborneAngle)

@@ -604,7 +604,6 @@ public class PlayerController : MonoBehaviour
         _body.velocity = finalVelocity;
         _chargeForce = Vector3.zero;
     }
-    private float airVerticalReductionAngle;
 
     private void HandleVerticalStateRotation(float time)
     {
@@ -681,7 +680,19 @@ public class PlayerController : MonoBehaviour
                         * TopSpeedMultiplier;
                     // TODO: Use variable
                     _speed -= acceleration; // Remove ground speed addition
-                    _speed = Mathf.MoveTowards(_speed, 0, acceleration * _groundBreakSpeed * WeightChargeMultiplier);
+
+                    Vector3 horizontalDirection = _horizontalRotation * Vector3.forward;
+                    float dot = Mathf.Clamp01(
+                        Vector3.Dot(horizontalDirection.normalized, _velocityDirection.normalized)
+                    );
+                    float stopOnTurn = (
+                        1 + _chargeTimeToStopWhenTurningPercentageDenominator * (1 - dot)
+                    );
+                    _speed = Mathf.MoveTowards(
+                        _speed,
+                        0,
+                        acceleration * _groundBreakSpeed / stopOnTurn * WeightChargeMultiplier
+                    );
 
                     if (!_expirationTimer.Expired)
                     {
@@ -707,6 +718,12 @@ public class PlayerController : MonoBehaviour
             {
                 float boostSpeed = _boostSpeed * Mathf.Clamp01(_chargeRatio) * BoostMultiplier;
                 _speed += boostSpeed;
+
+                float limitMultiplier = 1.5f;
+                if (_speed > boostSpeed * limitMultiplier)
+                    _speed = boostSpeed * limitMultiplier;
+
+                _velocityDirection = _horizontalRotation * Vector3.forward;
 
                 _chargeRatio = 0;
                 _chargeBurnoutTimer.Reset();

@@ -183,6 +183,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _playerIndex: 0
+  _reversedFlyControls: 0
   _followVirtualCamera: {fileID: 8336621076948441328}
   _stats:
     _boost: 0
@@ -245,9 +246,9 @@ MonoBehaviour:
     _topSpeed: 0
     _turn: 0
     _weight: 0
+  _maxAirTime: 0.75
   _secondsToReachFullGroundSpeed: 5
   _secondsToReachFullAirSpeed: 0.3
-  _secondsUntilGravity: 0.75
   _maxForwardGroundSpeed: 300
   _maxForwardAirSpeed: 700
   _gravityScale: 2.5
@@ -257,8 +258,9 @@ MonoBehaviour:
   _lookAirVerticalRotationDegsPerSecond: 80
   _lookAirRollRotationMaxRotationAngle: 45
   _lookAirMaxRotationalBasedSpeedMultiplier: 0.3
-  _rotationSpeed: 5
-  _slippinessScale: 1
+  _rideRotationSpeed: 15
+  _chargeRotationSpeedExtra: 70
+  _maxTurnMagnitude: 3
   _airRotationSpeed: 50
   _maxAirborneAngle: 80
   _minAirborneAngle: 55
@@ -275,6 +277,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 64
   _chargeTime: 1
+  _chargeTimeToStopWhenTurningPercentageDenominator: 20
   _chargeExpirationTime: 2
   _chargeBurnoutTime: 3
   _boostSpeed: 1000

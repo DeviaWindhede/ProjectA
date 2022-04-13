@@ -21,16 +21,13 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     private float _secondsToReachFullGroundSpeed = 5;
 
-    [SerializeField]
+    [SerializeField, Min(0.01f)]
     private float _secondsToReachFullAirSpeed = 0.75f;
-
-    [SerializeField]
-    private float _secondsUntilGravity = 0.75f;
 
     [SerializeField]
     private float _maxForwardGroundSpeed = 300f;
 
-    [SerializeField]
+    [SerializeField, Min(0.01f)]
     private float _maxForwardAirSpeed = 1000f;
 
     [SerializeField]
@@ -56,10 +53,13 @@ public class PlayerController : MonoBehaviour
     private float _lookAirMaxRotationalBasedSpeedMultiplier = 0.5f;
 
     [SerializeField, Min(0)]
-    private float _rotationSpeed = 70;
+    private float _rideRotationSpeed = 70;
+
+    [SerializeField, Min(0)]
+    private float _chargeRotationSpeedExtra = 70;
 
     [SerializeField, Min(0.01f)]
-    private float _slippinessScale = 3;
+    private float _maxTurnMagnitude = 3;
 
     [SerializeField]
     private float _airRotationSpeed = 50f; // TODO
@@ -105,6 +105,9 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     private float _chargeTime = 1f;
 
+    [SerializeField, Min(0)]
+    private float _chargeTimeToStopWhenTurningPercentageDenominator = 20f;
+
     [SerializeField]
     private float _chargeExpirationTime = 2f;
 
@@ -148,6 +151,7 @@ public class PlayerController : MonoBehaviour
     private float _speed;
     private float _gravitySpeed;
     private Vector3 _velocityDirection;
+    private float _airVerticalReductionAngle;
 
     // Rotation
     private Vector3 _forward;
@@ -208,82 +212,48 @@ public class PlayerController : MonoBehaviour
     // Min speed = 1/5x / 0.2x
     private float TopSpeedMultiplier
     {
-        get
-        {
-            float topSpeedMultiplier = 1f;
-            if (_playerStats.TopSpeed > 2)
-                topSpeedMultiplier = (6f + (float)_playerStats.TopSpeed) / 8f;
-            else if (_playerStats.TopSpeed < 2)
-                topSpeedMultiplier = (18f + (float)_playerStats.TopSpeed) / 20f;
-            return topSpeedMultiplier;
-        }
+        get { return GetStatMultiplierValue(_playerStats.TopSpeed, 8, 20); }
     }
-
-    // Max charge = 3x
-    // Min charge = 1/5x / 0.2x
-    private float ChargeMultiplier {
-        get {
-            float chargeMultiplier = 1f;
-            if (_playerStats.Charge > 2)
-                chargeMultiplier = (6f + (float)_playerStats.Charge) / 8f;
-            else if (_playerStats.Charge < 2)
-                chargeMultiplier = (18f + (float)_playerStats.Charge) / 20f;
-            return chargeMultiplier;
-        }
+    private float BoostMultiplier
+    {
+        get { return GetStatMultiplierValue(_playerStats.Boost, 8, 20); }
+    }
+    private float ChargeMultiplier
+    {
+        get { return GetStatMultiplierValue(_playerStats.Charge, 8, 20); }
+    }
+    private float TurnMultiplier
+    {
+        get { return GetStatMultiplierValue(_playerStats.Turn, 8, 20); }
+    }
+    private float GlideMultiplier
+    {
+        get { return GetStatMultiplierValue(_playerStats.Glide, 16, 32); }
     }
 
     private float WeightChargeMultiplier
     {
-        get
-        {
-            float weightMultiplier = 1f;
-            if (_playerStats.Weight > 2)
-                weightMultiplier = (30f + (float)_playerStats.Weight) / 32f;
-            else if (_playerStats.Weight < 2)
-                weightMultiplier = (62f + (float)_playerStats.Weight) / 64f;
-            return weightMultiplier;
-        }
-    }
-
-    // Max glide = 3x
-    // Min glide = 1/5x / 0.2x
-    private float GlideMultiplier {
-        get {
-            float glideMultiplier = 1f;
-            if (_playerStats.Glide > 2)
-                glideMultiplier = (6f + (float)_playerStats.Glide) / 8f;
-            else if (_playerStats.Glide < 2)
-                glideMultiplier = (18f + (float)_playerStats.Glide) / 20f;
-            return glideMultiplier;
-        }
+        get { return GetStatMultiplierValue(_playerStats.Weight, 8, 20); }
     }
     private float WeightGlideMultiplier
     {
-        get
-        {
-            float weightMultiplier = 1f;
-            if (_playerStats.Weight > 2)
-                weightMultiplier = (30f + (float)_playerStats.Weight) / 32f;
-            else if (_playerStats.Weight < 2)
-                weightMultiplier = (62f + (float)_playerStats.Weight) / 64f;
-            return weightMultiplier;
-        }
+        get { return GetStatMultiplierValue(_playerStats.Weight, 32, 64); }
     }
-
-
-    private float WeightSlippynessMultiplier
+    private float WeightTurnMultiplier
     {
-        get
-        {
-            float weightMultiplier = 1f;
-            if (_playerStats.Weight > 2)
-                weightMultiplier = (30f + (float)_playerStats.Weight) / 32f;
-            else if (_playerStats.Weight < 2)
-                weightMultiplier = (62f + (float)_playerStats.Weight) / 64f;
-            return weightMultiplier;
-        }
+        get { return GetStatMultiplierValue(_playerStats.Weight, 8, 20); }
     }
 
+    private float GetStatMultiplierValue(int stat, int overDefault, int underDefault)
+    {
+        int defaultValue = 2;
+        float multiplier = 1f;
+        if (_playerStats.Weight > defaultValue)
+            multiplier = (float)(overDefault - defaultValue + stat) / (float)overDefault;
+        else if (_playerStats.Weight < defaultValue)
+            multiplier = (float)(underDefault - defaultValue + stat) / (float)underDefault;
+        return multiplier;
+    }
 
     #region Helpers
     private bool ShouldSlide
@@ -486,27 +456,23 @@ public class PlayerController : MonoBehaviour
         Quaternion rotationExtra = Quaternion.Euler(
             Vector3.up
                 * 45
-                / (0.01f + _rotationSpeed)
+                / (0.01f + _rideRotationSpeed)
                 * Mathf.Sign(GetNegativeAngle(_velocityDirection, horizontalDirection))
         );
         _velocityDirection +=
-            _horizontalRotation * rotationExtra * Vector3.forward * _rotationSpeed * time;
-        if (_velocityDirection.magnitude > _slippinessScale)
+            _horizontalRotation
+            * rotationExtra
+            * Vector3.forward
+            * _rideRotationSpeed
+            * WeightTurnMultiplier
+            * time;
+        if (_velocityDirection.magnitude > _maxTurnMagnitude)
         {
-            _velocityDirection = _velocityDirection.normalized * _slippinessScale;
-        }
-
-        float dot = Vector3.Dot(horizontalDirection.normalized, _velocityDirection.normalized);
-        if (dot >= 1 - 0.0001f && _rotationSpeed > 0)
-        {
-            _velocityDirection = horizontalDirection.normalized;
+            _velocityDirection = _velocityDirection.normalized * _maxTurnMagnitude;
         }
 
         // Speed acceleration
         // TODO: Make acceleration non-linear
-
-
-
         float maxSpeed = _maxForwardGroundSpeed * WeightSpeedMultiplier * TopSpeedMultiplier;
         var acceleration = time / _secondsToReachFullGroundSpeed * maxSpeed;
         _speed += acceleration;
@@ -532,7 +498,16 @@ public class PlayerController : MonoBehaviour
     {
         // Horizontal Rotation
         Quaternion horizontalDelta = Quaternion.Euler(
-            Vector3.up * _lookGroundedRotationDegsPerSecond * time * _inputs.direction.x
+            Vector3.up
+                * _lookGroundedRotationDegsPerSecond
+                * TurnMultiplier
+                * time
+                * _inputs.direction.x
+                + Vector3.up
+                    * _chargeRotationSpeedExtra
+                    * time
+                    * _inputs.direction.x
+                    * (_inputs.isCharging ? 1 : 0)
         );
         _horizontalRotation = _horizontalRotation * horizontalDelta;
 
@@ -578,13 +553,16 @@ public class PlayerController : MonoBehaviour
     private void FlyingState(float time)
     {
         HandleVerticalStateRotation(time);
-
         _velocityDirection = _forward;
+        // WeightGlideMultiplier
 
         // Speed acceleration
         // TODO: Make acceleration non-linear
-        float reductionMultiplier = _lookAirMaxRotationalBasedSpeedMultiplier + (1 - _lookAirMaxRotationalBasedSpeedMultiplier) * airVerticalReductionAngle; // TODO: Add variable to this
-        float maxSpeed = _maxForwardAirSpeed * WeightSpeedMultiplier * TopSpeedMultiplier * reductionMultiplier;
+        float reductionMultiplier =
+            _lookAirMaxRotationalBasedSpeedMultiplier
+            + (1 - _lookAirMaxRotationalBasedSpeedMultiplier) * _airVerticalReductionAngle; // TODO: Add variable to this
+        float maxSpeed =
+            _maxForwardAirSpeed * WeightSpeedMultiplier * TopSpeedMultiplier * reductionMultiplier;
         var acceleration = time / _secondsToReachFullAirSpeed * maxSpeed;
         _speed += acceleration;
 
@@ -598,8 +576,6 @@ public class PlayerController : MonoBehaviour
             _gravitySpeed += _gravityScale * WeightSpeedMultiplier * TopSpeedMultiplier * WeightGlideMultiplier / GlideMultiplier;
         }
 
-        Vector3 finalVelocity = _velocityDirection.normalized * _speed * time;
-        finalVelocity += Vector3.down * _gravitySpeed * time;
 
         OnCharge(time);
         finalVelocity += _chargeForce * time;
@@ -607,17 +583,22 @@ public class PlayerController : MonoBehaviour
         _body.velocity = finalVelocity;
         _chargeForce = Vector3.zero;
     }
-
     private float airVerticalReductionAngle;
+
     private void HandleVerticalStateRotation(float time)
     {
         // Vertical Rotation
+        Vector3 vertRotationAmount = Vector3.right * _lookAirVerticalRotationDegsPerSecond * _inputs.direction.y * time;
+        Quaternion deltaRotation = Quaternion.Euler(vertRotationAmount);
+        float angle = 90 - Vector3.Angle(_verticalRotation * deltaRotation * Vector3.forward, Vector3.up);
+
         Quaternion deltaRotation = Quaternion.Euler(
             Vector3.right * _lookAirVerticalRotationDegsPerSecond * _inputs.direction.y * time
         );
         float angle =
             90 - Vector3.Angle(_verticalRotation * deltaRotation * Vector3.forward, Vector3.up);
 
+        // Angle cap
         if (angle <= -_minAirborneAngle)
             _verticalRotation = Quaternion.Euler(Vector3.right * _minAirborneAngle);
         else if (angle >= _maxAirborneAngle)
@@ -628,13 +609,16 @@ public class PlayerController : MonoBehaviour
         // Horizontal Rotation
         float reductionAngle = Mathf.Sign(angle) >= 0 ? _maxAirborneAngle : -_minAirborneAngle;
         airVerticalReductionAngle = angle / reductionAngle;
-        float reductionMultiplier = _lookAirMaxRotationalBasedSpeedMultiplier + (1 - _lookAirMaxRotationalBasedSpeedMultiplier) * airVerticalReductionAngle;
+        float reductionMultiplier =
+            _lookAirMaxRotationalBasedSpeedMultiplier
+            + (1 - _lookAirMaxRotationalBasedSpeedMultiplier) * airVerticalReductionAngle;
         Quaternion horizontalDelta = Quaternion.Euler(
             Vector3.up
-                * _inputs.direction.x
                 * _lookAirHorizontalRotationDegsPerSecond
-                * time
                 * reductionMultiplier
+                * TurnMultiplier
+                * time
+                * _inputs.direction.x
         );
         _horizontalRotation = _horizontalRotation * horizontalDelta;
 
@@ -702,7 +686,9 @@ public class PlayerController : MonoBehaviour
         {
             if (_chargeRatio != 0 && CurrentState == PlayerPhysicsState.Grounded)
             {
-                _speed += _boostSpeed * Mathf.Clamp01(_chargeRatio);
+                float boostSpeed = _boostSpeed * Mathf.Clamp01(_chargeRatio) * BoostMultiplier;
+                _speed += boostSpeed;
+
                 _chargeRatio = 0;
                 _chargeBurnoutTimer.Reset();
                 _expirationTimer.Reset();

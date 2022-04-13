@@ -120,6 +120,38 @@ public struct PlayerStats
         current.Weight += apply.Weight;
         return current;
     }
+
+    public static bool operator ==(PlayerStats current, PlayerStats apply)
+    {
+        return current.Boost == apply.Boost &&
+        current.Charge == apply.Charge &&
+        current.Defence == apply.Defence &&
+        current.Glide == apply.Glide &&
+        current.Health == apply.Health &&
+        current.Offence == apply.Offence &&
+        current.TopSpeed == apply.TopSpeed &&
+        current.Turn == apply.Turn &&
+        current.Weight == apply.Weight;
+    }
+    public static bool operator !=(PlayerStats current, PlayerStats apply)
+    {
+        return current.Boost != apply.Boost ||
+        current.Charge != apply.Charge ||
+        current.Defence != apply.Defence ||
+        current.Glide != apply.Glide ||
+        current.Health != apply.Health ||
+        current.Offence != apply.Offence ||
+        current.TopSpeed != apply.TopSpeed ||
+        current.Turn != apply.Turn ||
+        current.Weight != apply.Weight;
+    }
+
+    public override bool Equals(object obj)
+    {
+        if (obj.GetType() == typeof(PlayerStats))
+            return this == (PlayerStats)obj;
+        return base.Equals(obj);
+    }
 }
 
 public struct PlayerInputValues
@@ -136,10 +168,14 @@ public class Player : MonoBehaviour, IPlayerInputCallbacks
     private int _playerIndex = 0;
 
     [SerializeField]
+    private bool _reversedFlyControls;
+
+    [SerializeField]
     private Transform _followVirtualCamera;
 
     [SerializeField]
     private PlayerStats _stats;
+
 
     private PlayerController _playerController;
     private PlayerInputActionMapping _inputHandler;
@@ -159,6 +195,7 @@ public class Player : MonoBehaviour, IPlayerInputCallbacks
     {
         _playerController = GetComponent<PlayerController>();
         SetupInputs();
+        _playerController.UpdatePlayerStats(_stats);
     }
 
     private void SetupInputs()
@@ -166,7 +203,6 @@ public class Player : MonoBehaviour, IPlayerInputCallbacks
         _inputs = new PlayerInputValues();
         _inputs.direction = Vector2.zero;
         _inputs.isCharging = false;
-        UpdatePlayerStats(new PlayerStats());
         InputManager inputManager = GameObject.Find("InputManager").GetComponent<InputManager>();
         PlayerInput playerInput = inputManager.GetPlayerInput(_playerIndex);
 
@@ -220,7 +256,7 @@ public class Player : MonoBehaviour, IPlayerInputCallbacks
     public void MoveCallback(Vector2 input)
     {
         _inputs.direction.x = input.x;
-        _inputs.direction.y = -input.y;
+        _inputs.direction.y = -input.y * (_reversedFlyControls ? -1 : 1);
         UpdateControllerInput();
     }
 
@@ -242,5 +278,11 @@ public class Player : MonoBehaviour, IPlayerInputCallbacks
         {
             _inputHandler.Unsubscribe();
         }
+    }
+
+    private void OnValidate()
+    {
+        if (Application.isPlaying)
+            _playerController.UpdatePlayerStats(_stats);
     }
 }

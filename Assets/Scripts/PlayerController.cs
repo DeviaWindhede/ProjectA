@@ -17,6 +17,8 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     private PlayerStats _playerStats;
 
+    [SerializeField, Min(0)] private float _maxAirTime = 5f;
+
     [Header("Velocity")]
     [SerializeField]
     private float _secondsToReachFullGroundSpeed = 5;
@@ -139,6 +141,7 @@ public class PlayerController : MonoBehaviour
     // States
     private PlayerPhysicsState _currentState = PlayerPhysicsState.Airborne;
     private Timer _groundedCooldownTimer = new Timer(0.2f);
+    private Timer _airBorneTimer;
 
     // Charge
     private Vector3 _chargeForce;
@@ -292,6 +295,7 @@ public class PlayerController : MonoBehaviour
         _chargeTimer = new Timer(_chargeTime);
         _expirationTimer = new Timer(_chargeExpirationTime);
         _chargeBurnoutTimer = new Timer(_chargeBurnoutTime);
+        InitializeAirborneTimer();
 
         _horizontalRotation = Quaternion.Euler(Vector3.up * this.transform.rotation.eulerAngles.y);
         this.transform.rotation = Quaternion.identity;
@@ -317,6 +321,7 @@ public class PlayerController : MonoBehaviour
         _gravitySpeed = 0;
         _velocityDirection = Vector3.zero;
         _verticalRotation = Quaternion.identity;
+        _airBorneTimer.Reset();
     }
 
     private void OnAirborneEnter()
@@ -336,7 +341,13 @@ public class PlayerController : MonoBehaviour
     public void UpdatePlayerStats(PlayerStats stats)
     {
         _playerStats = stats;
+
+        float time = _airBorneTimer.Time;
+        InitializeAirborneTimer();
+        _airBorneTimer += time;
     }
+
+    private void InitializeAirborneTimer() { _airBorneTimer = new Timer(_maxAirTime * GlideMultiplier + _playerStats.Glide / 2); }
 
     void FixedUpdate()
     {
@@ -571,9 +582,11 @@ public class PlayerController : MonoBehaviour
             _speed = Mathf.MoveTowards(_speed, maxSpeed, acceleration * _speedCorrectionFactor);
         }
 
-        if (_useGravity)
+        _airBorneTimer += time;
+        if (_useGravity && _airBorneTimer.Expired)
         {
-            _gravitySpeed += _gravityScale * WeightSpeedMultiplier * TopSpeedMultiplier * WeightGlideMultiplier / GlideMultiplier;
+            _gravitySpeed += _gravityScale;
+            finalVelocity += Vector3.down * _gravitySpeed * time;
         }
 
 
@@ -608,10 +621,10 @@ public class PlayerController : MonoBehaviour
 
         // Horizontal Rotation
         float reductionAngle = Mathf.Sign(angle) >= 0 ? _maxAirborneAngle : -_minAirborneAngle;
-        airVerticalReductionAngle = angle / reductionAngle;
+        _airVerticalReductionAngle = angle / reductionAngle;
         float reductionMultiplier =
             _lookAirMaxRotationalBasedSpeedMultiplier
-            + (1 - _lookAirMaxRotationalBasedSpeedMultiplier) * airVerticalReductionAngle;
+            + (1 - _lookAirMaxRotationalBasedSpeedMultiplier) * _airVerticalReductionAngle;
         Quaternion horizontalDelta = Quaternion.Euler(
             Vector3.up
                 * _lookAirHorizontalRotationDegsPerSecond

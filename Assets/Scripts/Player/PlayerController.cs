@@ -569,9 +569,13 @@ public class PlayerController : MonoBehaviour
 
         // Speed acceleration
         // TODO: Make acceleration non-linear
-        float reductionMultiplier =
-            _lookAirMaxRotationalBasedSpeedMultiplier
-            + (1 - _lookAirMaxRotationalBasedSpeedMultiplier) * _airVerticalReductionAngle; // TODO: Add variable to this
+        float reductionMultiplier = 1;
+        if (_velocityDirection.y > 0) {
+            reductionMultiplier =
+                _lookAirMaxRotationalBasedSpeedMultiplier
+                + (1 - _lookAirMaxRotationalBasedSpeedMultiplier) * (1 - _airVerticalReductionAngle); // TODO: Add variable to this
+        }
+
         float maxSpeed =
             _maxForwardAirSpeed * WeightSpeedMultiplier * TopSpeedMultiplier * reductionMultiplier;
         var acceleration = time / _secondsToReachFullAirSpeed * maxSpeed;
@@ -596,7 +600,6 @@ public class PlayerController : MonoBehaviour
 
             finalVelocity += Vector3.down * _gravitySpeed * time;
         }
-
 
         OnCharge(time);
         finalVelocity += _chargeForce * time;
@@ -717,11 +720,11 @@ public class PlayerController : MonoBehaviour
             if (_chargeRatio != 0 && CurrentState == PlayerPhysicsState.Grounded)
             {
                 float boostSpeed = _boostSpeed * Mathf.Clamp01(_chargeRatio) * BoostMultiplier;
-                _speed += boostSpeed;
 
                 float limitMultiplier = 1.5f;
-                if (_speed > boostSpeed * limitMultiplier)
-                    _speed = boostSpeed * limitMultiplier;
+                float maxSpeed = _maxForwardGroundSpeed * WeightSpeedMultiplier * TopSpeedMultiplier;
+                if (_speed <= maxSpeed * limitMultiplier)
+                    _speed += boostSpeed;
 
                 _velocityDirection = _horizontalRotation * Vector3.forward;
 

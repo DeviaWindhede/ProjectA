@@ -22,7 +22,7 @@ public class Pickupable : MonoBehaviour
 {
     // TODO: Implement powerups and ability pickups
     [SerializeField]
-    private StatType statType;
+    private StatType _statType;
 
     [SerializeField]
     private float _hitboxRadius = 1f;
@@ -119,9 +119,20 @@ public class Pickupable : MonoBehaviour
         };
 
         _body = GetComponent<Rigidbody>();
-        _stats = _pickupInfo[statType].playerStats;
+        if (_statType != StatType.None) SetStatType(_statType);
+    }
+
+    public void SetStatType(StatType statType)
+    {
+        _statType = statType;
+        _stats = _pickupInfo[_statType].playerStats;
         _material = GetComponent<MeshRenderer>().material;
-        _material.mainTexture = _pickupInfo[statType].texture;
+        _material.mainTexture = _pickupInfo[_statType].texture;
+    }
+
+    public void AddForce(Vector3 force)
+    {
+        _body.AddForce(force * Time.fixedDeltaTime);
     }
 
     // Gives pickup to player instead of otherway around to prevent edge-case
@@ -129,7 +140,7 @@ public class Pickupable : MonoBehaviour
     {
         if (_useGravity)
         {
-            _body.AddForce(Vector3.down * _gravityScale * Time.fixedDeltaTime);
+            AddForce(Vector3.down * _gravityScale);
         }
 
         var hits = Physics.SphereCastAll(
@@ -159,7 +170,7 @@ public class Pickupable : MonoBehaviour
 
     private void OnCollisionEnter(Collision other)
     {
-        if (other.gameObject.layer == _groundLayer)
+        if (other.gameObject.layer == Mathf.Log(_groundLayer.value, 2))
         {
             _useGravity = false;
             _body.velocity = Vector3.zero;

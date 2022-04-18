@@ -6,6 +6,7 @@ public class ResourceManager : MonoBehaviour
 {
     public enum StatType
     {
+        None,
         All,
         Boost,
         Charge,

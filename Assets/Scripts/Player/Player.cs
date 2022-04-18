@@ -31,6 +31,7 @@ public class Player : MonoBehaviour, IPlayerInputCallbacks
     private PlayerController _playerController;
     private PlayerInputActionMapping _inputHandler;
     private PlayerInputValues _inputs;
+    private InputManager _inputManager;
 
     public int PlayerIndex
     {
@@ -54,17 +55,13 @@ public class Player : MonoBehaviour, IPlayerInputCallbacks
         _inputs = new PlayerInputValues();
         _inputs.direction = Vector2.zero;
         _inputs.isCharging = false;
-        InputManager inputManager = GameObject.Find("InputManager").GetComponent<InputManager>();
-        PlayerInput playerInput = inputManager.GetPlayerInput(_playerIndex);
-
-        if (playerInput != null)
-            this.InstantiateInputHandler(playerInput, inputManager);
-        else
+        _inputManager = GameObject.FindObjectOfType<InputManager>();
+        if (_inputManager != null)
         {
-            inputManager.onJoin += ctx =>
+            _inputManager.onJoin += ctx =>
             {
                 if (ctx.playerIndex == _playerIndex) {
-                    InstantiateInputHandler(ctx, inputManager);
+                    InstantiateInputHandler(ctx);
                 }
             };
         }
@@ -81,7 +78,7 @@ public class Player : MonoBehaviour, IPlayerInputCallbacks
         _playerController.UpdatePlayerStats(_stats);
     }
 
-    private void InstantiateInputHandler(PlayerInput playerInput, InputManager inputManager)
+    private void InstantiateInputHandler(PlayerInput playerInput)
     {
         if (playerInput)
         {
@@ -92,7 +89,7 @@ public class Player : MonoBehaviour, IPlayerInputCallbacks
             {
                 _inputHandler = new PlayerInputActionMapping(gameplayMap);
                 _inputHandler.Subscribe(this);
-                inputManager.onJoin -= ctx => InstantiateInputHandler(ctx, inputManager);
+                _inputManager.onJoin -= ctx => InstantiateInputHandler(ctx);
             }
         }
     }
@@ -100,8 +97,12 @@ public class Player : MonoBehaviour, IPlayerInputCallbacks
     public void SetPlayerIndex(int value)
     {
         // TODO: Implement player index replacement protection
-        if (value > 0)
+        if (value >= 0 && _inputManager != null)
+        {
             _playerIndex = value;
+            PlayerInput playerInput = _inputManager.GetPlayerInput(_playerIndex);
+            if (playerInput != null) this.InstantiateInputHandler(playerInput);
+        }
     }
 
     public void MoveCallback(Vector2 input)
@@ -123,6 +124,11 @@ public class Player : MonoBehaviour, IPlayerInputCallbacks
         UpdateControllerInput();
     }
 
+    public void PauseCallback(float value)
+    {
+        // Missing implementation
+    }
+
     private void OnDestroy()
     {
         if (_inputHandler != null)
@@ -131,9 +137,9 @@ public class Player : MonoBehaviour, IPlayerInputCallbacks
         }
     }
 
-    private void OnValidate()
-    {
-        if (Application.isPlaying)
-            _playerController.UpdatePlayerStats(_stats);
-    }
+    // private void OnValidate()
+    // {
+    //     if (Application.isPlaying)
+    //         _playerController.UpdatePlayerStats(_stats);
+    // }
 }

@@ -6,6 +6,7 @@ public interface IPlayerInputCallbacks
     void MoveCallback(Vector2 input);
     void ChargeCallback(float value);
     void BreakCallback(float value);
+    void PauseCallback(float value);
 }
 
 public class PlayerInputActionMapping
@@ -15,6 +16,7 @@ public class PlayerInputActionMapping
     private InputAction _actionMove;
     private InputAction _actionCharge;
     private InputAction _actionBreak;
+    private InputAction _actionPause;
 
     public PlayerInputActionMapping(InputActionMap actionMap)
     {
@@ -22,6 +24,7 @@ public class PlayerInputActionMapping
         _actionMove = actionMap.FindAction("Move", true);
         _actionCharge = actionMap.FindAction("Charge", true);
         _actionBreak = actionMap.FindAction("Break", true);
+        _actionPause = actionMap.FindAction("Pause", true);
     }
 
     public void Subscribe(IPlayerInputCallbacks input)
@@ -42,6 +45,10 @@ public class PlayerInputActionMapping
         _actionBreak.Enable();
         _actionBreak.performed += context => _playerInput.BreakCallback(context.ReadValue<float>());
         _actionBreak.canceled += context => _playerInput.BreakCallback(context.ReadValue<float>());
+
+        _actionPause.Enable();
+        _actionPause.performed += context => _playerInput.BreakCallback(context.ReadValue<float>());
+        _actionPause.canceled += context => _playerInput.BreakCallback(context.ReadValue<float>());
     }
 
     public void Unsubscribe()
@@ -65,6 +72,12 @@ public class PlayerInputActionMapping
             _actionBreak.canceled -= context =>
                 _playerInput.BreakCallback(context.ReadValue<float>());
             _actionBreak.Disable();
+
+            _actionPause.performed -= context =>
+                _playerInput.PauseCallback(context.ReadValue<float>());
+            _actionPause.canceled -= context =>
+                _playerInput.PauseCallback(context.ReadValue<float>());
+            _actionPause.Disable();
 
             _playerInput = null;
         }

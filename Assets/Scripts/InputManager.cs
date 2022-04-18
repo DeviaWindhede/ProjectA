@@ -22,37 +22,41 @@ public class InputManager : MonoBehaviour
     public const string GAMEPLAY_MAPPING_NAME = "Gameplay";
     public event System.Action<PlayerInput> onJoin;
 
-    private List<Input> inputs;
-    private PlayerInputManager manager;
+    public int AvailableInputs { get { return _inputs.Count; } }
+
+    private List<Input> _inputs;
+    private PlayerInputManager _manager;
 
 
     private void Awake()
     {
-        inputs = new List<Input>();
+        _inputs = new List<Input>();
 
-        manager = GetComponent<PlayerInputManager>();
-        manager.onPlayerJoined += ctx => this.OnPlayerJoined(ctx);
-        manager.onPlayerLeft += ctx => this.OnPlayerLeft(ctx);
+        _manager = GetComponent<PlayerInputManager>();
+        _manager.onPlayerJoined += ctx => this.OnPlayerJoined(ctx);
+        _manager.onPlayerLeft += ctx => this.OnPlayerLeft(ctx);
+
+        Object.DontDestroyOnLoad(this);
     }
 
     public void OnPlayerJoined(PlayerInput input)
     {
         input.gameObject.transform.parent = this.transform;
-        input.gameObject.name = "PlayerInput " + this.inputs.Count;
+        input.gameObject.name = "PlayerInput " + this._inputs.Count;
 
-        var inputObj = new Input(this.inputs.Count, input);
-        this.inputs.Add(inputObj);
+        var inputObj = new Input(this._inputs.Count, input);
+        this._inputs.Add(inputObj);
         this.onJoin.Invoke(input);
     }
 
     public void OnPlayerLeft(PlayerInput input)
     {
-        print("Player " + this.inputs.Find(x => x.playerInput == input).index + " has disconnected");
+        print("Player " + this._inputs.Find(x => x.playerInput == input).index + " has disconnected");
         // this.inputs.Remove(input);
     }
 
     public PlayerInput GetPlayerInput(int index)
     {
-        return inputs.Exists(i => i.index == index) ? inputs.First(i => i.index == index).playerInput : null;
+        return _inputs.Exists(i => i.index == index) ? _inputs.First(i => i.index == index).playerInput : null;
     }
 }

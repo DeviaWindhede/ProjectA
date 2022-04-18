@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 4678684518779838265}
   - component: {fileID: 7510079602247591539}
   - component: {fileID: 6421169598891868903}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: default
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -93,7 +93,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5232675846030945889}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Warp Star
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -247,18 +247,18 @@ MonoBehaviour:
     _turn: 0
     _weight: 0
   _maxAirTime: 0.75
-  _secondsToReachFullGroundSpeed: 5
+  _secondsToReachFullGroundSpeed: 1
   _secondsToReachFullAirSpeed: 0.3
-  _maxForwardGroundSpeed: 300
-  _maxForwardAirSpeed: 700
+  _maxForwardGroundSpeed: 600
+  _maxForwardAirSpeed: 750
   _gravityScale: 2.5
   _speedCorrectionFactor: 10
-  _lookGroundedRotationDegsPerSecond: 90
-  _lookAirHorizontalRotationDegsPerSecond: 90
+  _lookGroundedRotationDegsPerSecond: 50
+  _lookAirHorizontalRotationDegsPerSecond: 50
   _lookAirVerticalRotationDegsPerSecond: 80
   _lookAirRollRotationMaxRotationAngle: 45
   _lookAirMaxRotationalBasedSpeedMultiplier: 0.3
-  _rideRotationSpeed: 15
+  _rideRotationSpeed: 4
   _chargeRotationSpeedExtra: 70
   _maxTurnMagnitude: 3
   _airRotationSpeed: 50
@@ -276,7 +276,7 @@ MonoBehaviour:
   _collidableLayer:
     serializedVersion: 2
     m_Bits: 64
-  _chargeTime: 1
+  _chargeTime: 1.5
   _chargeTimeToStopWhenTurningPercentageDenominator: 20
   _chargeExpirationTime: 2
   _chargeBurnoutTime: 3

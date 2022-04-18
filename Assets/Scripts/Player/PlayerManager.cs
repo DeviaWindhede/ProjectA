@@ -10,6 +10,9 @@ public class PlayerManager : MonoBehaviour
     public static List<Player> players;
     void Start()
     {
+        var inputManager = FindObjectOfType<InputManager>();
+        if (inputManager != null && inputManager.AvailableInputs > 0) playerCount = inputManager.AvailableInputs;
+
         players = new List<Player>();
         for (int i = 0; i < playerCount; i++) {
             Vector3 spawnPosition = Vector3.zero;

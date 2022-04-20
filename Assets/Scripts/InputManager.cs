@@ -39,7 +39,7 @@ public class InputManager : MonoBehaviour
         Object.DontDestroyOnLoad(this);
     }
 
-    public void OnPlayerJoined(PlayerInput input)
+    private void OnPlayerJoined(PlayerInput input)
     {
         input.gameObject.transform.parent = this.transform;
         input.gameObject.name = "PlayerInput " + this._inputs.Count;
@@ -49,7 +49,7 @@ public class InputManager : MonoBehaviour
         this.onJoin.Invoke(input);
     }
 
-    public void OnPlayerLeft(PlayerInput input)
+    private void OnPlayerLeft(PlayerInput input)
     {
         print("Player " + this._inputs.Find(x => x.playerInput == input).index + " has disconnected");
         // this.inputs.Remove(input);

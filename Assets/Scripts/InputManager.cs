@@ -30,11 +30,10 @@ public class InputManager : MonoBehaviour
     public const string GAMEPLAY_MAPPING_NAME = "Gameplay";
     public event System.Action<Input> onJoin;
 
-    public int AvailableInputs { get { return _inputs.Count; } }
-
     private List<Input> _inputs;
     private PlayerInputManager _manager;
 
+    public int InputCount { get { return _inputs.Count; } }
 
     private void Awake()
     {
@@ -60,6 +59,7 @@ public class InputManager : MonoBehaviour
     private void OnPlayerLeft(PlayerInput input)
     {
         print("Player " + this._inputs.Find(x => x.PlayerInput == input).Index + " has disconnected");
+        // TODO: Handle input disconnect
         // this.inputs.Remove(input);
     }
 

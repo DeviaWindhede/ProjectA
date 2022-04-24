@@ -11,7 +11,7 @@ public class PlayerManager : MonoBehaviour
     void Start()
     {
         var inputManager = FindObjectOfType<InputManager>();
-        if (inputManager != null && inputManager.AvailableInputs > 0) playerCount = inputManager.AvailableInputs;
+        if (inputManager != null && inputManager.InputCount > 0) playerCount = inputManager.InputCount;
 
         players = new List<Player>();
         for (int i = 0; i < playerCount; i++) {

@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -32,54 +33,34 @@ public class PlayerInputActionMapping
         this.Unsubscribe();
         _playerInput = input;
 
-        _actionMove.Enable();
-        _actionMove.performed += context => _playerInput.MoveCallback(context.ReadValue<Vector2>());
-        _actionMove.canceled += context => _playerInput.MoveCallback(context.ReadValue<Vector2>());
-
-        _actionCharge.Enable();
-        _actionCharge.performed += context =>
-            _playerInput.ChargeCallback(context.ReadValue<float>());
-        _actionCharge.canceled += context =>
-            _playerInput.ChargeCallback(context.ReadValue<float>());
-
-        _actionBreak.Enable();
-        _actionBreak.performed += context => _playerInput.BreakCallback(context.ReadValue<float>());
-        _actionBreak.canceled += context => _playerInput.BreakCallback(context.ReadValue<float>());
-
-        _actionPause.Enable();
-        _actionPause.performed += context => _playerInput.BreakCallback(context.ReadValue<float>());
-        _actionPause.canceled += context => _playerInput.BreakCallback(context.ReadValue<float>());
+        SubscribeToInputAction(_actionMove, context => _playerInput.MoveCallback(context.ReadValue<Vector2>()), true);
+        SubscribeToInputAction(_actionCharge, context => _playerInput.ChargeCallback(context.ReadValue<float>()), true);
+        SubscribeToInputAction(_actionBreak, context => _playerInput.BreakCallback(context.ReadValue<float>()), true);
+        SubscribeToInputAction(_actionPause, context => _playerInput.PauseCallback(context.ReadValue<float>()), true);
     }
 
     public void Unsubscribe()
     {
         if (_playerInput != null)
         {
-            _actionMove.performed -= context =>
-                _playerInput.MoveCallback(context.ReadValue<Vector2>());
-            _actionMove.canceled -= context =>
-                _playerInput.MoveCallback(context.ReadValue<Vector2>());
-            _actionMove.Disable();
-
-            _actionCharge.performed -= context =>
-                _playerInput.ChargeCallback(context.ReadValue<float>());
-            _actionCharge.canceled -= context =>
-                _playerInput.ChargeCallback(context.ReadValue<float>());
-            _actionCharge.Disable();
-
-            _actionBreak.performed -= context =>
-                _playerInput.BreakCallback(context.ReadValue<float>());
-            _actionBreak.canceled -= context =>
-                _playerInput.BreakCallback(context.ReadValue<float>());
-            _actionBreak.Disable();
-
-            _actionPause.performed -= context =>
-                _playerInput.PauseCallback(context.ReadValue<float>());
-            _actionPause.canceled -= context =>
-                _playerInput.PauseCallback(context.ReadValue<float>());
-            _actionPause.Disable();
-
+            UnsubscribeFromInputAction(_actionMove, context => _playerInput.MoveCallback(context.ReadValue<Vector2>()), true);
+            UnsubscribeFromInputAction(_actionCharge, context => _playerInput.ChargeCallback(context.ReadValue<float>()), true);
+            UnsubscribeFromInputAction(_actionBreak, context => _playerInput.BreakCallback(context.ReadValue<float>()), true);
+            UnsubscribeFromInputAction(_actionPause, context => _playerInput.PauseCallback(context.ReadValue<float>()), true);
             _playerInput = null;
         }
+    }
+
+    private void SubscribeToInputAction(InputAction inputAction, Action<InputAction.CallbackContext> callbackAction, bool isButton = true)
+    {
+        inputAction.Enable();
+        inputAction.performed += c => callbackAction(c);
+        if (isButton) inputAction.canceled += c => callbackAction(c);
+    }
+    private void UnsubscribeFromInputAction(InputAction inputAction, Action<InputAction.CallbackContext> callbackAction, bool isButton = true)
+    {
+        inputAction.performed -= c => callbackAction(c);
+        if (isButton) inputAction.canceled -= c => callbackAction(c);
+        _actionBreak.Disable();
     }
 }

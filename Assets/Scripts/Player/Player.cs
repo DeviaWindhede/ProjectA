@@ -29,7 +29,7 @@ public class Player : MonoBehaviour, IPlayerInputCallbacks
 
 
     private PlayerController _playerController;
-    private PlayerInputActionMapping _inputHandler;
+    private PlayerInputActionMapping _inputMapping;
     private PlayerInputValues _inputs;
     private InputManager _inputManager;
 
@@ -56,11 +56,11 @@ public class Player : MonoBehaviour, IPlayerInputCallbacks
         _inputs.direction = Vector2.zero;
         _inputs.isCharging = false;
         _inputManager = GameObject.FindObjectOfType<InputManager>();
-        if (_inputManager != null)
-        {
+        if (_inputManager != null) // method is always unsubscribed from in first step when the input is preassigned from playerindex
+        {                          // therefore a null check is not needed
             _inputManager.onJoin += ctx =>
             {
-                if (ctx.playerIndex == _playerIndex) {
+                if (ctx.Index == _playerIndex) {
                     InstantiateInputHandler(ctx);
                 }
             };
@@ -78,19 +78,13 @@ public class Player : MonoBehaviour, IPlayerInputCallbacks
         _playerController.UpdatePlayerStats(_stats);
     }
 
-    private void InstantiateInputHandler(PlayerInput playerInput)
+    private void InstantiateInputHandler(Input input)
     {
-        if (playerInput)
+        if (input != null)
         {
-            InputActionMap gameplayMap = playerInput.actions.actionMaps
-                .ToArray()
-                .First(m => m.name == InputManager.GAMEPLAY_MAPPING_NAME);
-            if (gameplayMap != null)
-            {
-                _inputHandler = new PlayerInputActionMapping(gameplayMap);
-                _inputHandler.Subscribe(this);
-                _inputManager.onJoin -= ctx => InstantiateInputHandler(ctx);
-            }
+            _inputMapping = input.Mapping;
+            _inputMapping.Subscribe(this);
+            _inputManager.onJoin -= ctx => InstantiateInputHandler(ctx);
         }
     }
 
@@ -100,7 +94,7 @@ public class Player : MonoBehaviour, IPlayerInputCallbacks
         if (value >= 0 && _inputManager != null)
         {
             _playerIndex = value;
-            PlayerInput playerInput = _inputManager.GetPlayerInput(_playerIndex);
+            Input playerInput = _inputManager.GetPlayerInput(_playerIndex);
             if (playerInput != null) this.InstantiateInputHandler(playerInput);
         }
     }
@@ -131,9 +125,9 @@ public class Player : MonoBehaviour, IPlayerInputCallbacks
 
     private void OnDestroy()
     {
-        if (_inputHandler != null)
+        if (_inputMapping != null)
         {
-            _inputHandler.Unsubscribe();
+            _inputMapping.Unsubscribe();
         }
     }
 

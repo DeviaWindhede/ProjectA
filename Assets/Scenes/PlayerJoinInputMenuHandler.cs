@@ -16,13 +16,11 @@ public class PlayerJoinInputMenuHandler : MonoBehaviour
     {
         _manager = FindObjectOfType<InputManager>();
         _manager.onJoin += ctx => {
-            text[ctx.playerIndex].SetText(ctx.user.pairedDevices[0].displayName);
+            text[ctx.Index].SetText(ctx.PlayerInput.user.pairedDevices[0].displayName);
             if (_p1ActionMap == null) {
                 var i = _manager.GetPlayerInput(0);
 
-                InputActionMap gameplayMap = i.actions.actionMaps
-                    .ToArray()
-                    .First(m => m.name == InputManager.GAMEPLAY_MAPPING_NAME);
+                InputActionMap gameplayMap = i.PlayerInput.actions.FindActionMap(InputManager.GAMEPLAY_MAPPING_NAME, true);
                 if (gameplayMap != null)
                 {
                     _p1ActionMap = gameplayMap.FindAction("Pause", true);

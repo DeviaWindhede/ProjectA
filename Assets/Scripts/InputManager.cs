@@ -4,15 +4,23 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Linq;
 
-public struct Input
+public class Input
 {
-    public int index;
-    public PlayerInput playerInput;
+    private int _index;
+    private PlayerInput _playerInput;
+    private PlayerInputActionMapping _mapping;
+
+    public int Index { get { return _index; } }
+    public PlayerInput PlayerInput { get { return _playerInput; } }
+    public PlayerInputActionMapping Mapping { get { return _mapping; } }
 
     public Input(int index, PlayerInput playerInput)
     {
-        this.index = index;
-        this.playerInput = playerInput;
+        _index = index;
+        _playerInput = playerInput;
+
+        InputActionMap gameplayMap = playerInput.actions.FindActionMap(InputManager.GAMEPLAY_MAPPING_NAME, true);
+        _mapping = new PlayerInputActionMapping(gameplayMap);
     }
 }
 
@@ -20,7 +28,7 @@ public struct Input
 public class InputManager : MonoBehaviour
 {
     public const string GAMEPLAY_MAPPING_NAME = "Gameplay";
-    public event System.Action<PlayerInput> onJoin;
+    public event System.Action<Input> onJoin;
 
     public int AvailableInputs { get { return _inputs.Count; } }
 
@@ -46,17 +54,17 @@ public class InputManager : MonoBehaviour
 
         var inputObj = new Input(this._inputs.Count, input);
         this._inputs.Add(inputObj);
-        this.onJoin.Invoke(input);
+        this.onJoin.Invoke(inputObj);
     }
 
     private void OnPlayerLeft(PlayerInput input)
     {
-        print("Player " + this._inputs.Find(x => x.playerInput == input).index + " has disconnected");
+        print("Player " + this._inputs.Find(x => x.PlayerInput == input).Index + " has disconnected");
         // this.inputs.Remove(input);
     }
 
-    public PlayerInput GetPlayerInput(int index)
+    public Input GetPlayerInput(int index)
     {
-        return _inputs.Exists(i => i.index == index) ? _inputs.First(i => i.index == index).playerInput : null;
+        return _inputs.Exists(i => i.Index == index) ? _inputs.First(i => i.Index == index) : null;
     }
 }

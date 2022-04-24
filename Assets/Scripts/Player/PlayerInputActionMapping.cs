@@ -18,7 +18,7 @@ public class PlayerInputActionMapping
     private InputAction _actionBreak;
     private InputAction _actionPause;
 
-    public PlayerInputActionMapping(InputActionMap actionMap)
+    public PlayerInputActionMapping(InputActionMap actionMap) // TODO: use builder pattern
     {
         _inputActions = actionMap;
         _actionMove = actionMap.FindAction("Move", true);

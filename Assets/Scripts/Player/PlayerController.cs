@@ -411,7 +411,7 @@ public class PlayerController : MonoBehaviour
                 GroundedState(time);
                 break;
             case PlayerPhysicsState.Airborne:
-                FlyingState(time);
+                AirborneState(time);
                 break;
         }
         _mesh.position = _finalRotation * _meshPivotPoint + transform.position;
@@ -460,7 +460,7 @@ public class PlayerController : MonoBehaviour
 
     private void GroundedState(float time)
     {
-        HandleHorizontalStateRotation(time);
+        HandleGroundedRotation(time);
 
         // Horizontal Velocity
         Vector3 horizontalDirection = _horizontalRotation * Vector3.forward;
@@ -505,7 +505,7 @@ public class PlayerController : MonoBehaviour
         _body.velocity = finalVelocity;
     }
 
-    private void HandleHorizontalStateRotation(float time)
+    private void HandleGroundedRotation(float time)
     {
         // Horizontal Rotation
         Quaternion horizontalDelta = Quaternion.Euler(
@@ -561,9 +561,9 @@ public class PlayerController : MonoBehaviour
         _forward = _finalRotation * Vector3.forward;
     }
 
-    private void FlyingState(float time)
+    private void AirborneState(float time)
     {
-        HandleVerticalStateRotation(time);
+        HandleAirborneRotation(time);
         _velocityDirection = _forward;
         // WeightGlideMultiplier
 
@@ -608,7 +608,7 @@ public class PlayerController : MonoBehaviour
         _chargeForce = Vector3.zero;
     }
 
-    private void HandleVerticalStateRotation(float time)
+    private void HandleAirborneRotation(float time)
     {
         // Vertical Rotation
         Vector3 vertRotationAmount = Vector3.right * _lookAirVerticalRotationDegsPerSecond * _inputs.direction.y * time;

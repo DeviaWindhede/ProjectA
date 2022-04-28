@@ -211,6 +211,8 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    //TODO: Implement a stat multiplier value editor, should also display final multipliers and ranges
+
     // Max speed = 3x
     // Min speed = 1/5x / 0.2x
     private float TopSpeedMultiplier
@@ -492,14 +494,9 @@ public class PlayerController : MonoBehaviour
             _speed = Mathf.MoveTowards(_speed, maxSpeed, acceleration * _speedCorrectionFactor);
         }
 
-        if (_inputs.isBreaking) // TODO: Implement breaking
-        {
-            _speed = 0;
-        }
-        else
-        {
-            OnCharge(time);
-        }
+        // TODO: Implement breaking (_inputs.isBreaking)
+
+        OnCharge(time);
 
         Vector3 finalVelocity = _verticalRotation * _velocityDirection.normalized * _speed * time;
         _body.velocity = finalVelocity;
@@ -646,7 +643,7 @@ public class PlayerController : MonoBehaviour
         _horizontalRotation = _horizontalRotation * horizontalDelta;
 
         // Roll Rotation
-        // TODO: Make roll rotation dependent on air friction
+        // TODO: Make roll rotation dependent on air friction and torque
         _rollRotation = Quaternion.RotateTowards(
             _rollRotation,
             Quaternion.Euler(
@@ -662,7 +659,7 @@ public class PlayerController : MonoBehaviour
         _forward = _finalRotation * Vector3.forward;
     }
 
-    // TODO: Was hastily implemented, refactor this
+    // TODO: Was hastily implemented, please refactor
     private void OnCharge(float time)
     {
         if (CurrentState == PlayerPhysicsState.Airborne)

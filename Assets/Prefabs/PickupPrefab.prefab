@@ -103,7 +103,7 @@ MonoBehaviour:
   _playerLayer:
     serializedVersion: 2
     m_Bits: 256
-  _gravityScale: 150
+  _gravityScale: 250
   _groundLayer:
     serializedVersion: 2
     m_Bits: 64

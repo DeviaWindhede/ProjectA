@@ -227,7 +227,7 @@ public class PlayerController : MonoBehaviour
     }
     private float TurnMultiplier
     {
-        get { return GetStatMultiplierValue(_playerStats.Turn, 8, 20); }
+        get { return GetStatMultiplierValue(_playerStats.Turn, 6, 20); }
     }
     private float GlideMultiplier
     {
@@ -244,7 +244,7 @@ public class PlayerController : MonoBehaviour
     }
     private float WeightTurnMultiplier
     {
-        get { return GetStatMultiplierValue(_playerStats.Weight, 8, 20); }
+        get { return GetStatMultiplierValue(_playerStats.Weight, 4, 16); }
     }
 
     private float GetStatMultiplierValue(int stat, int overDefault, int underDefault)
@@ -587,6 +587,8 @@ public class PlayerController : MonoBehaviour
         }
 
         Vector3 finalVelocity = _velocityDirection.normalized * _speed * time;
+
+        finalVelocity += Vector3.up * GlideMultiplier * time;
         finalVelocity += Vector3.down * WeightGlideMultiplier * time;
 
         _airBorneTimer += time;

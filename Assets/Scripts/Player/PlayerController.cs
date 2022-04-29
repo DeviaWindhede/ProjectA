@@ -131,7 +131,7 @@ public class PlayerController : MonoBehaviour
     // Component
     private Rigidbody _body;
     private CapsuleCollider _collider;
-    private PlayerUIHandler _camera;
+    private PlayerUIHandler _uiHandler;
     private bool _groundHit;
     private bool _countAsGroundHit;
     private RaycastHit _groundHitInfo;
@@ -311,7 +311,7 @@ public class PlayerController : MonoBehaviour
     void Start()
     {
         int playerIndex = GetComponent<Player>().PlayerIndex;
-        _camera = GameObject
+        _uiHandler = GameObject
             .FindObjectOfType<CameraManager>()
             .GetCamera(playerIndex)
             .GetComponent<PlayerUIHandler>();
@@ -562,7 +562,6 @@ public class PlayerController : MonoBehaviour
     {
         HandleAirborneRotation(time);
         _velocityDirection = _forward;
-        // WeightGlideMultiplier
 
         // Speed acceleration
         // TODO: Make acceleration non-linear
@@ -611,12 +610,12 @@ public class PlayerController : MonoBehaviour
     {
         // Vertical Rotation
         Vector3 vertRotationAmount = Vector3.right * _lookAirVerticalRotationDegsPerSecond * _inputs.direction.y * time;
-        Quaternion deltaRotation = Quaternion.Euler(vertRotationAmount);
-        float angle = 90 - Vector3.Angle(_verticalRotation * deltaRotation * Vector3.forward, Vector3.up);
+        Quaternion deltaPitchRotation = Quaternion.Euler(vertRotationAmount);
+        float angle = 90 - Vector3.Angle(_verticalRotation * deltaPitchRotation * Vector3.forward, Vector3.up);
 
         // Faster decent angle
         if (angle <= 0 && Mathf.Sign(_inputs.direction.y) == 1)
-            deltaRotation = Quaternion.Euler(vertRotationAmount * 2f);
+            deltaPitchRotation = Quaternion.Euler(vertRotationAmount * 2f);
 
         // Angle cap
         if (angle <= -_minAirborneAngle)
@@ -624,7 +623,7 @@ public class PlayerController : MonoBehaviour
         else if (angle >= _maxAirborneAngle)
             _verticalRotation = Quaternion.Euler(Vector3.right * -_maxAirborneAngle);
         else
-            _verticalRotation = _verticalRotation * deltaRotation;
+            _verticalRotation = _verticalRotation * deltaPitchRotation;
 
         // Horizontal Rotation
         float reductionAngle = Mathf.Sign(angle) >= 0 ? _maxAirborneAngle : -_minAirborneAngle;
@@ -680,7 +679,7 @@ public class PlayerController : MonoBehaviour
                         * _maxForwardGroundSpeed
                         * WeightSpeedMultiplier
                         * TopSpeedMultiplier;
-                    // TODO: Use variable
+                    // TODO: create acceleration member variable
                     _speed -= acceleration; // Remove ground speed addition
 
                     Vector3 horizontalDirection = _horizontalRotation * Vector3.forward;
@@ -701,7 +700,7 @@ public class PlayerController : MonoBehaviour
                         _chargeTimer += time * ChargeMultiplier;
                         _chargeRatio = _chargeTimer.Ratio;
                         if (_chargeTimer.Expired)
-                        { // TODO: Move logic to state machine
+                        { // TODO: Move logic to state machine, might be overkill though
                             _expirationTimer += time;
                         }
                     }
@@ -734,10 +733,12 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        _camera.SetExpirationRatio(_expirationTimer.Ratio);
+
+        // UI
+        _uiHandler.SetExpirationRatio(_expirationTimer.Ratio);
         if (_expirationTimer.Expired)
         {
-            _camera.SetExpirationRatio(0);
+            _uiHandler.SetExpirationRatio(0);
             _chargeRatio = 0;
             _chargeBurnoutTimer += time;
             if (_chargeBurnoutTimer.Expired)
@@ -748,12 +749,12 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        _camera.SetBurnout(_expirationTimer.Expired);
+        _uiHandler.SetBurnout(_expirationTimer.Expired);
 
         if (_expirationTimer.Expired)
-            _camera.SetFillRatio(1 - _chargeBurnoutTimer.Ratio);
+            _uiHandler.SetFillRatio(1 - _chargeBurnoutTimer.Ratio);
         else
-            _camera.SetFillRatio(_chargeTimer.Ratio);
+            _uiHandler.SetFillRatio(_chargeTimer.Ratio);
     }
 
     private void OnValidate()

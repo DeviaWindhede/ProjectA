@@ -659,15 +659,15 @@ public class PlayerController : MonoBehaviour
     }
 
     // TODO: Was hastily implemented, please refactor
-    private void OnCharge(float time)
+    private void OnCharge(float time) //state machine?
     {
-        if (CurrentState == PlayerPhysicsState.Airborne)
-        {
-            _chargeTimer += _passiveAirChargeGain * time;
-            _chargeRatio = _chargeTimer.Ratio;
-            _expirationTimer.Reset();
-        }
+        HandleChargeVelocity(time);
+        HandleChargeTimer(time);
+        HandleChargeUI();
+    }
 
+    private void HandleChargeVelocity(float time)
+    {
         if (_inputs.isCharging)
         {
             switch (CurrentState)
@@ -683,62 +683,58 @@ public class PlayerController : MonoBehaviour
                     _speed -= acceleration; // Remove ground speed addition
 
                     Vector3 horizontalDirection = _horizontalRotation * Vector3.forward;
+
                     float dot = Mathf.Clamp01(
                         Vector3.Dot(horizontalDirection.normalized, _velocityDirection.normalized)
                     );
-                    float stopOnTurn = (
-                        1 + _chargeTimeToStopWhenTurningPercentageDenominator * (1 - dot)
-                    );
-                    _speed = Mathf.MoveTowards(
-                        _speed,
-                        0,
-                        acceleration * _groundBreakSpeed / stopOnTurn * WeightChargeMultiplier
-                    );
+                    float stopOnTurn = 1 + _chargeTimeToStopWhenTurningPercentageDenominator * (1 - dot);
+                    float maxDelta = acceleration * _groundBreakSpeed / stopOnTurn * WeightChargeMultiplier;
 
-                    if (!_expirationTimer.Expired)
-                    {
-                        _chargeTimer += time * ChargeMultiplier;
-                        _chargeRatio = _chargeTimer.Ratio;
-                        if (_chargeTimer.Expired)
-                        { // TODO: Move logic to state machine, might be overkill though
-                            _expirationTimer += time;
-                        }
-                    }
+                    _speed = Mathf.MoveTowards(_speed, 0, maxDelta);
+
                     break;
                 case PlayerPhysicsState.Airborne:
-                    // TODO: Rotate star towards forward vec
-
-                    // float angle = Vector3.Angle(_velocityDirection, _forward) // if it is more than forward;
                     _chargeForce = Vector3.down * _speed + Vector3.down * _gravityScale * 2;
                     break;
             }
         }
-        else
+        else if (_chargeRatio != 0 && CurrentState == PlayerPhysicsState.Grounded)
         {
-            if (_chargeRatio != 0 && CurrentState == PlayerPhysicsState.Grounded)
-            {
-                float boostSpeed = _boostSpeed * Mathf.Clamp01(_chargeRatio) * BoostMultiplier;
+            float boostSpeed = _boostSpeed * Mathf.Clamp01(_chargeRatio) * BoostMultiplier;
 
-                float limitMultiplier = 1.5f;
-                float maxSpeed = _maxForwardGroundSpeed * WeightSpeedMultiplier * TopSpeedMultiplier;
-                if (_speed <= maxSpeed * limitMultiplier)
-                    _speed += boostSpeed;
+            float limitMultiplier = 1.5f;
+            float maxSpeed = _maxForwardGroundSpeed * WeightSpeedMultiplier * TopSpeedMultiplier;
+            if (_speed <= maxSpeed * limitMultiplier)
+                _speed += boostSpeed;
 
-                _velocityDirection = _horizontalRotation * Vector3.forward;
+            _velocityDirection = _horizontalRotation * Vector3.forward;
+        }
+    }
 
-                _chargeRatio = 0;
-                _chargeBurnoutTimer.Reset();
-                _expirationTimer.Reset();
-                _chargeTimer.Reset();
-            }
+    private void HandleChargeTimer(float time)
+    {
+        if (CurrentState == PlayerPhysicsState.Airborne) // Unexpirable charge gain
+        {
+            _chargeTimer += _passiveAirChargeGain * time;
+            _chargeRatio = _chargeTimer.Ratio;
+            _expirationTimer.Reset();
+        }
+        else if (_inputs.isCharging && !_expirationTimer.Expired) // When you can charge
+        {
+            _chargeTimer += time * ChargeMultiplier;
+            _chargeRatio = _chargeTimer.Ratio;
+            if (_chargeTimer.Expired) _expirationTimer += time;
+        }
+        else if (_chargeRatio != 0 && CurrentState == PlayerPhysicsState.Grounded) // On release
+        {
+            _chargeRatio = 0;
+            _chargeBurnoutTimer.Reset();
+            _expirationTimer.Reset();
+            _chargeTimer.Reset();
         }
 
-
-        // UI
-        _uiHandler.SetExpirationRatio(_expirationTimer.Ratio);
         if (_expirationTimer.Expired)
         {
-            _uiHandler.SetExpirationRatio(0);
             _chargeRatio = 0;
             _chargeBurnoutTimer += time;
             if (_chargeBurnoutTimer.Expired)
@@ -748,7 +744,12 @@ public class PlayerController : MonoBehaviour
                 _chargeTimer.Reset();
             }
         }
+    }
 
+    private void HandleChargeUI()
+    {
+        float expirationRatio = _expirationTimer.Expired ? 0 : _expirationTimer.Ratio; // 0 to show burnout ui
+        _uiHandler.SetExpirationRatio(expirationRatio);
         _uiHandler.SetBurnout(_expirationTimer.Expired);
 
         if (_expirationTimer.Expired)
@@ -756,6 +757,7 @@ public class PlayerController : MonoBehaviour
         else
             _uiHandler.SetFillRatio(_chargeTimer.Ratio);
     }
+
 
     private void OnValidate()
     {

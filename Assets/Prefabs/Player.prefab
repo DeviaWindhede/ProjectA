@@ -697,7 +697,7 @@ MonoBehaviour:
   _chargeExpirationTime: 2
   _chargeBurnoutTime: 3
   _boostSpeed: 1000
-  _groundBreakSpeed: 4
+  _groundBreakSpeed: 1
   _passiveAirChargeGain: 0.1
 --- !u!1 &8190405054996486659
 GameObject:

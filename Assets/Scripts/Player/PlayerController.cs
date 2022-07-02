@@ -437,10 +437,7 @@ public class PlayerController : MonoBehaviour
                 {
                     // entering here means the player is trying to move from a surface to a new one or was flying and has now hit a surface
                     Vector3 vec = _lastNormal == Vector3.zero ? Vector3.up : _lastNormal; // If first time touching ground
-                    if (!IsSurfaceClimbable(_groundHitInfo.normal, vec))
-                    {
-                        CurrentState = PlayerPhysicsState.Airborne;
-                    }
+                    if (!IsSurfaceClimbable(_groundHitInfo.normal, vec)) CurrentState = PlayerPhysicsState.Airborne;
                 }
             }
             else if (CurrentState == PlayerPhysicsState.Airborne)
@@ -748,14 +745,16 @@ public class PlayerController : MonoBehaviour
 
     private void HandleChargeUI()
     {
-        float expirationRatio = _expirationTimer.Expired ? 0 : _expirationTimer.Ratio; // 0 to show burnout ui
-        _uiHandler.SetExpirationRatio(expirationRatio);
-        _uiHandler.SetBurnout(_expirationTimer.Expired);
+        if (_uiHandler) {
+            float expirationRatio = _expirationTimer.Expired ? 0 : _expirationTimer.Ratio; // 0 to show burnout ui
+            _uiHandler.SetExpirationRatio(expirationRatio);
+            _uiHandler.SetBurnout(_expirationTimer.Expired);
 
-        if (_expirationTimer.Expired)
-            _uiHandler.SetFillRatio(1 - _chargeBurnoutTimer.Ratio);
-        else
-            _uiHandler.SetFillRatio(_chargeTimer.Ratio);
+            if (_expirationTimer.Expired)
+                _uiHandler.SetFillRatio(1 - _chargeBurnoutTimer.Ratio);
+            else
+                _uiHandler.SetFillRatio(_chargeTimer.Ratio);
+        }
     }
 
 

@@ -995,16 +995,20 @@ MonoBehaviour:
   runInBackground: 1
   autoStartServerBuild: 0
   serverTickRate: 30
-  offlineScene: 
-  onlineScene: 
+  offlineScene: Assets/Scenes/SteamworksOnlineTesting/MainMenu.unity
+  onlineScene: Assets/Scenes/SteamworksOnlineTesting/Lobby.unity
   transport: {fileID: 2073230332}
   networkAddress: localhost
   maxConnections: 100
   authenticator: {fileID: 0}
-  playerPrefab: {fileID: 0}
-  autoCreatePlayer: 0
+  playerPrefab: {fileID: 5511472203808056305, guid: 1aefd140fbd746a40b31a69e9111ee7e,
+    type: 3}
+  autoCreatePlayer: 1
   playerSpawnMethod: 0
-  spawnPrefabs: []
+  spawnPrefabs:
+  - {fileID: 6815951686089565659, guid: 831b5d83ea42c804aa036b3ef72fdbef, type: 3}
+  _gamePlayerPrefab: {fileID: 6816423856846216278, guid: 831b5d83ea42c804aa036b3ef72fdbef,
+    type: 3}
 --- !u!4 &2073230334
 Transform:
   m_ObjectHideFlags: 0
@@ -1033,8 +1037,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   currentLobbyId: 0
-  hostButton: {fileID: 1481002951}
-  lobbyNameText: {fileID: 1422178091}
 --- !u!114 &2073230336
 MonoBehaviour:
   m_ObjectHideFlags: 0

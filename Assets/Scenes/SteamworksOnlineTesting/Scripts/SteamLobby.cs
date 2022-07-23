@@ -6,7 +6,7 @@ using Steamworks;
 using TMPro;
 using static HelperFunctions;
 
-public class SteamLobby : Singleton<MonoBehaviour> {
+public class SteamLobby : Singleton<SteamLobby> {
     protected Callback<LobbyCreated_t> LobbyCreated;
     protected Callback<GameLobbyJoinRequested_t> JoinRequest;
     protected Callback<LobbyEnter_t> LobbyEntered;
@@ -54,7 +54,7 @@ public class SteamLobby : Singleton<MonoBehaviour> {
         string lobbyName = SteamFriends.GetPersonaName().ToString() + "'s\nlobby";
         SteamMatchmaking.SetLobbyData(
             lobbyId,
-            "lobbyName",
+            "name",
             lobbyName
         );
     }
@@ -69,8 +69,7 @@ public class SteamLobby : Singleton<MonoBehaviour> {
         CSteamID lobbyId = new CSteamID(callback.m_ulSteamIDLobby);
 
         // Clients
-        if (NetworkServer.active)
-            return;
+        if (NetworkServer.active) return;
 
         networkManager.networkAddress = SteamMatchmaking.GetLobbyData(
             lobbyId,

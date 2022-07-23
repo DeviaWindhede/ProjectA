@@ -5,7 +5,7 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/OnlineTesting/OnlineTestingScene.unity
     guid: 41e2662ed4917424488260a5e7d036df
   - enabled: 0
@@ -14,4 +14,10 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/TestGameScene.unity
     guid: 949f50164b0c76341836f9599ede4e3e
+  - enabled: 1
+    path: Assets/Scenes/SteamworksOnlineTesting/MainMenu.unity
+    guid: 91ed048d3b0983e40b8147b6580fdb82
+  - enabled: 1
+    path: Assets/Scenes/SteamworksOnlineTesting/Lobby.unity
+    guid: b2678966c906ec84181f4c460bb1a750
   m_configObjects: {}

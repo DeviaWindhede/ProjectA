@@ -152,6 +152,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ef2db5a81884b674db16ea2ea510d839, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  lobbyNameText: {fileID: 1422178091}
+  playerListViewContent: {fileID: 975525984}
+  playerListItemPrefab: {fileID: 3981696333176153652, guid: 502f0c59c80f9b440a4696ee90259ebe,
+    type: 3}
+  localPlayerObject: {fileID: 0}
+  currentLobbyId: 0
+  playerItemCreated: 0
+  localPlayerController: {fileID: 0}
 --- !u!4 &92415666
 Transform:
   m_ObjectHideFlags: 0

@@ -6,6 +6,7 @@ using Steamworks;
 using TMPro;
 using UnityEngine.UI;
 using System.Linq;
+using static HelperFunctions;
 
 public class LobbyController : Singleton<LobbyController> {
     public TextMeshProUGUI lobbyNameText;
@@ -47,6 +48,7 @@ public class LobbyController : Singleton<LobbyController> {
     public void CreateHostPlayerItem() {
         foreach (PlayerObjectController player in NetworkManager.GamePlayers) {
             InstantiatePlayerItem(player);
+            this.playerItemCreated = true;
         }
     }
 

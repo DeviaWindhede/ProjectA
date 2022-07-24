@@ -122,9 +122,6 @@ public class PlayerController : MonoBehaviour
     [SerializeField, Min(0f)]
     private float _passiveAirChargeGain = 0.1f;
 
-    // Input
-    private PlayerInputValues _inputs;
-
     // Component
     private Rigidbody _body;
     private CapsuleCollider _collider;
@@ -335,11 +332,6 @@ public class PlayerController : MonoBehaviour
         _velocityDirection = Vector3.zero;
     }
 
-    public void UpdateInputs(PlayerInputValues inputs)
-    {
-        _inputs = inputs;
-    }
-
     public void UpdatePlayerStats()
     {
         float time = _airBorneTimer.Time;
@@ -489,7 +481,7 @@ public class PlayerController : MonoBehaviour
             _speed = Mathf.MoveTowards(_speed, maxSpeed, acceleration * _speedCorrectionFactor);
         }
 
-        // TODO: Implement breaking (_inputs.isBreaking)
+        // TODO: Implement breaking (_data.input.isBreaking)
 
         OnCharge(time);
 
@@ -505,12 +497,12 @@ public class PlayerController : MonoBehaviour
                 * _lookGroundedRotationDegsPerSecond
                 * TurnMultiplier
                 * time
-                * _inputs.direction.x
+                * _data.input.direction.x
                 + Vector3.up
                     * _chargeRotationSpeedExtra
                     * time
-                    * _inputs.direction.x
-                    * (_inputs.isCharging ? 1 : 0)
+                    * _data.input.direction.x
+                    * (_data.input.isCharging ? 1 : 0)
         );
         _horizontalRotation = _horizontalRotation * horizontalDelta;
 
@@ -604,12 +596,12 @@ public class PlayerController : MonoBehaviour
     private void HandleAirborneRotation(float time)
     {
         // Vertical Rotation
-        Vector3 vertRotationAmount = Vector3.right * _lookAirVerticalRotationDegsPerSecond * _inputs.direction.y * time;
+        Vector3 vertRotationAmount = Vector3.right * _lookAirVerticalRotationDegsPerSecond * _data.input.direction.y * time;
         Quaternion deltaPitchRotation = Quaternion.Euler(vertRotationAmount);
         float angle = 90 - Vector3.Angle(_verticalRotation * deltaPitchRotation * Vector3.forward, Vector3.up);
 
         // Faster decent angle
-        if (angle <= 0 && Mathf.Sign(_inputs.direction.y) == 1)
+        if (angle <= 0 && Mathf.Sign(_data.input.direction.y) == 1)
             deltaPitchRotation = Quaternion.Euler(vertRotationAmount * 2f);
 
         // Angle cap
@@ -632,7 +624,7 @@ public class PlayerController : MonoBehaviour
                 * reductionMultiplier
                 * TurnMultiplier
                 * time
-                * _inputs.direction.x
+                * _data.input.direction.x
         );
         _horizontalRotation = _horizontalRotation * horizontalDelta;
 
@@ -643,7 +635,7 @@ public class PlayerController : MonoBehaviour
             Quaternion.Euler(
                 Vector3.forward
                     * _lookAirRollRotationMaxRotationAngle
-                    * -_inputs.direction.x
+                    * -_data.input.direction.x
                     * reductionMultiplier
             ),
             airRollRotationAnglePerSecond * time
@@ -663,7 +655,7 @@ public class PlayerController : MonoBehaviour
 
     private void HandleChargeVelocity(float time)
     {
-        if (_inputs.isCharging)
+        if (_data.input.isCharging)
         {
             switch (CurrentState)
             {
@@ -714,7 +706,7 @@ public class PlayerController : MonoBehaviour
             _chargeRatio = _chargeTimer.Ratio;
             _expirationTimer.Reset();
         }
-        else if (_inputs.isCharging && !_expirationTimer.Expired) // When you can charge
+        else if (_data.input.isCharging && !_expirationTimer.Expired) // When you can charge
         {
             _chargeTimer += time * ChargeMultiplier;
             _chargeRatio = _chargeTimer.Ratio;

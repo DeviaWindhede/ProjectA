@@ -13,6 +13,8 @@ public class PlayerData : MonoBehaviour
         }
     }
 
+    public PlayerInputValues input;
+
     public delegate void PlayerDataUpdate();
     public event PlayerDataUpdate OnStatUpdate;
 }

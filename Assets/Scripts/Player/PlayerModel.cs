@@ -137,3 +137,15 @@ public struct PlayerStats {
         return base.GetHashCode();
     }
 }
+
+public class PlayerInputValues {
+    public Vector2 direction;
+    public bool isCharging;
+    public bool isBreaking;
+
+    public PlayerInputValues() {
+        direction = Vector2.zero;
+        isCharging = false;
+        isBreaking = false;
+    }
+}

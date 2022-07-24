@@ -5,13 +5,6 @@ using UnityEngine.InputSystem;
 using System.Linq;
 using static HelperFunctions;
 
-public struct PlayerInputValues
-{
-    public Vector2 direction;
-    public bool isCharging;
-    public bool isBreaking;
-}
-
 [RequireComponent(typeof(PlayerController), typeof(PlayerData))]
 public class Player : MonoBehaviour, IPlayerInputCallbacks
 {
@@ -28,6 +21,7 @@ public class Player : MonoBehaviour, IPlayerInputCallbacks
     private PlayerInputActionMapping _inputMapping;
     private PlayerInputValues _inputs;
     private InputManager _inputManager;
+    private PlayerData _data;
 
     public int PlayerIndex
     {
@@ -42,15 +36,13 @@ public class Player : MonoBehaviour, IPlayerInputCallbacks
     void Awake()
     {
         _playerController = GetComponent<PlayerController>();
-
+        _data = GetComponent<PlayerData>();
         SetupInputs();
     }
 
     private void SetupInputs()
     {
         _inputs = new PlayerInputValues();
-        _inputs.direction = Vector2.zero;
-        _inputs.isCharging = false;
         _inputManager = GameObject.FindObjectOfType<InputManager>();
         if (_inputManager != null) // method is always unsubscribed from in first step when the input is preassigned from playerindex
         {                          // therefore a null check is not needed
@@ -61,11 +53,6 @@ public class Player : MonoBehaviour, IPlayerInputCallbacks
                 }
             };
         }
-    }
-
-    private void UpdateControllerInput()
-    {
-        _playerController.UpdateInputs(_inputs);
     }
 
     private void InstantiateInputHandler(Input input)
@@ -93,19 +80,19 @@ public class Player : MonoBehaviour, IPlayerInputCallbacks
     {
         _inputs.direction.x = input.x;
         _inputs.direction.y = -input.y * (_reversedFlyControls ? -1 : 1);
-        UpdateControllerInput();
+        _data.input.direction = _inputs.direction;
     }
 
     public void ChargeCallback(float value)
     {
         _inputs.isCharging = value > 0;
-        UpdateControllerInput();
+        _data.input.isCharging = _inputs.isCharging;
     }
 
     public void BreakCallback(float value)
     {
         _inputs.isBreaking = value > 0;
-        UpdateControllerInput();
+        _data.input.isBreaking = _inputs.isBreaking;
     }
 
     public void PauseCallback(float value)

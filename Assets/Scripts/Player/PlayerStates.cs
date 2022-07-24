@@ -18,6 +18,7 @@ public class PlayerState {
 }
 
 public class PlayerGroundedState : PlayerState {
+
     public PlayerGroundedState(PlayerController controller, PlayerData data) {
     }
     public override void OnEnter(PlayerController controller) {
@@ -27,7 +28,6 @@ public class PlayerGroundedState : PlayerState {
         controller.verticalRotation = Quaternion.identity;
     }
     public override void OnExit(PlayerController controller) {
-        controller.groundedCooldownTimer.Reset();
         controller.lastNormal = Vector3.zero;
         controller.currentNormal = Vector3.zero;
     }
@@ -58,27 +58,27 @@ public class PlayerGroundedState : PlayerState {
         Quaternion rotationExtra = Quaternion.Euler(
             Vector3.up
                 * 45
-                / (0.01f + controller.rideRotationSpeed)
+                / (0.01f + data.rideRotationSpeed)
                 * Mathf.Sign(controller.GetNegativeAngle(controller.velocityDirection, horizontalDirection))
         );
         controller.velocityDirection +=
             controller.horizontalRotation
             * rotationExtra
             * Vector3.forward
-            * controller.rideRotationSpeed
+            * data.rideRotationSpeed
             * controller.WeightTurnMultiplier
             * time;
-        if (controller.velocityDirection.magnitude > controller.maxTurnMagnitude) {
-            controller.velocityDirection = controller.velocityDirection.normalized * controller.maxTurnMagnitude;
+        if (controller.velocityDirection.magnitude > data.maxTurnMagnitude) {
+            controller.velocityDirection = controller.velocityDirection.normalized * data.maxTurnMagnitude;
         }
 
         // Speed acceleration
         // TODO: Make acceleration non-linear
-        float maxSpeed = controller.maxForwardGroundSpeed * controller.WeightSpeedMultiplier * controller.TopSpeedMultiplier;
-        var acceleration = time / controller.secondsToReachFullGroundSpeed * maxSpeed;
+        float maxSpeed = data.maxForwardGroundSpeed * controller.WeightSpeedMultiplier * controller.TopSpeedMultiplier;
+        var acceleration = time / data.secondsToReachFullGroundSpeed * maxSpeed;
         controller.speed += acceleration;
         if (controller.speed > maxSpeed) {
-            controller.speed = Mathf.MoveTowards(controller.speed, maxSpeed, acceleration * controller.speedCorrectionFactor);
+            controller.speed = Mathf.MoveTowards(controller.speed, maxSpeed, acceleration * data.speedCorrectionFactor);
         }
 
         // TODO: Implement breaking (_data.input.isBreaking)
@@ -94,8 +94,8 @@ public class PlayerGroundedState : PlayerState {
         if (data.input.isCharging) {
             var acceleration =
                 time
-                / controller.secondsToReachFullGroundSpeed
-                * controller.maxForwardGroundSpeed
+                / data.secondsToReachFullGroundSpeed
+                * data.maxForwardGroundSpeed
                 * controller.WeightSpeedMultiplier
                 * controller.TopSpeedMultiplier;
             // TODO: create acceleration member variable
@@ -106,16 +106,16 @@ public class PlayerGroundedState : PlayerState {
             float dot = Mathf.Clamp01(
                 Vector3.Dot(horizontalDirection.normalized, controller.velocityDirection.normalized)
             );
-            float stopOnTurn = 1 + controller.chargeTimeToStopWhenTurningPercentageDenominator * (1 - dot);
-            float maxDelta = acceleration * controller.groundBreakSpeed / stopOnTurn * controller.WeightChargeMultiplier;
+            float stopOnTurn = 1 + data.chargeTimeToStopWhenTurningPercentageDenominator * (1 - dot);
+            float maxDelta = acceleration * data.groundBreakSpeed / stopOnTurn * controller.WeightChargeMultiplier;
 
             controller.speed = Mathf.MoveTowards(controller.speed, 0, maxDelta);
         }
         else if (controller.chargeRatio != 0) {
-            float boostSpeed = controller.boostSpeed * Mathf.Clamp01(controller.chargeRatio) * controller.BoostMultiplier;
+            float boostSpeed = data.boostSpeed * Mathf.Clamp01(controller.chargeRatio) * controller.BoostMultiplier;
 
             float limitMultiplier = 1.5f;
-            float maxSpeed = controller.maxForwardGroundSpeed * controller.WeightSpeedMultiplier * controller.TopSpeedMultiplier;
+            float maxSpeed = data.maxForwardGroundSpeed * controller.WeightSpeedMultiplier * controller.TopSpeedMultiplier;
             if (controller.speed <= maxSpeed * limitMultiplier)
                 controller.speed += boostSpeed;
 
@@ -148,17 +148,18 @@ public class PlayerGroundedState : PlayerState {
         }
     }
 
+    private int rotationRayCount = 10;
     private void HandleGroundedRotation(PlayerController controller, PlayerData data) {
         float time = Time.fixedDeltaTime;
         // Horizontal Rotation
         Quaternion horizontalDelta = Quaternion.Euler(
             Vector3.up
-                * controller.lookGroundedRotationDegsPerSecond
+                * data.lookGroundedRotationDegsPerSecond
                 * controller.TurnMultiplier
                 * time
                 * data.input.direction.x
                 + Vector3.up
-                    * controller.chargeRotationSpeedExtra
+                    * data.chargeRotationSpeedExtra
                     * time
                     * data.input.direction.x
                     * (data.input.isCharging ? 1 : 0)
@@ -195,7 +196,7 @@ public class PlayerGroundedState : PlayerState {
         controller.verticalRotation = Quaternion.RotateTowards(
             controller.verticalRotation,
             Quaternion.FromToRotation(Vector3.up, upVec),
-            controller.followGroundRotationAnglePerSecond * time
+            data.followGroundRotationAnglePerSecond * time
         );
         controller.finalRotation = controller.verticalRotation * controller.horizontalRotation;
         controller.vecForward = controller.finalRotation * Vector3.forward;
@@ -204,6 +205,9 @@ public class PlayerGroundedState : PlayerState {
 
 public class PlayerAirBorneState : PlayerState {
     private Timer _airBorneTimer;
+    private Timer _groundedCooldownTimer = new Timer(0.2f);
+    private float airRollRotationAnglePerSecond = 360f;
+    private float airVerticalReductionAngle;
 
     public PlayerAirBorneState(PlayerController controller, PlayerData data) {
         InitializeAirborneTimer(controller, data);
@@ -217,7 +221,7 @@ public class PlayerAirBorneState : PlayerState {
 
     private void InitializeAirborneTimer(PlayerController controller, PlayerData data) {
         _airBorneTimer = new Timer(
-            controller.maxAirTime * controller.GlideMultiplier + data.Stats.Glide / 2
+            data.maxAirTime * controller.GlideMultiplier + data.Stats.Glide / 2
         );
     }
 
@@ -228,22 +232,21 @@ public class PlayerAirBorneState : PlayerState {
         controller.gravitySpeed = 0;
         controller.velocityDirection = Vector3.zero;
 
-        controller.groundedCooldownTimer.Reset();
         controller.lastNormal = Vector3.zero;
         controller.currentNormal = Vector3.zero;
+        _groundedCooldownTimer.Reset();
     }
 
     public override void OnExit(PlayerController controller) {
         _airBorneTimer.Reset();
-        controller.groundedCooldownTimer.Reset();
-        log(_airBorneTimer.Time);
+        _groundedCooldownTimer.Reset();
     }
 
     public override void OnUpdate(PlayerController controller, PlayerData data) {
         // Transition
         float time = Time.fixedDeltaTime;
-        controller.groundedCooldownTimer.Time += time; // Cooldown until player is able to touch ground again
-        if (controller.groundedCooldownTimer.Expired) {
+        _groundedCooldownTimer.Time += time; // Cooldown until player is able to touch ground again
+        if (_groundedCooldownTimer.Expired) {
             if (controller.countAsGroundHit && controller.IsSurfaceClimbable(controller.groundHitInfo.normal, Vector3.up)) {
                 controller.CurrentState = PlayerPhysicsState.Grounded;
                 return;
@@ -259,16 +262,16 @@ public class PlayerAirBorneState : PlayerState {
         float reductionMultiplier = 1;
         if (controller.velocityDirection.y > 0) {
             reductionMultiplier =
-                controller.lookAirMaxRotationalBasedSpeedMultiplier
-                + (1 - controller.lookAirMaxRotationalBasedSpeedMultiplier) * (1 - controller.airVerticalReductionAngle); // TODO: Add variable to this
+                data.lookAirMaxRotationalBasedSpeedMultiplier
+                + (1 - data.lookAirMaxRotationalBasedSpeedMultiplier) * (1 - controller.airVerticalReductionAngle); // TODO: Add variable to this
         }
 
-        float maxSpeed = controller.maxForwardAirSpeed * controller.WeightSpeedMultiplier * controller.TopSpeedMultiplier * reductionMultiplier;
-        var acceleration = time / controller.secondsToReachFullAirSpeed * maxSpeed;
+        float maxSpeed = data.maxForwardAirSpeed * controller.WeightSpeedMultiplier * controller.TopSpeedMultiplier * reductionMultiplier;
+        var acceleration = time / data.secondsToReachFullAirSpeed * maxSpeed;
         controller.speed += acceleration;
 
         if (controller.speed > maxSpeed) {
-            controller.speed = Mathf.MoveTowards(controller.speed, maxSpeed, acceleration * controller.speedCorrectionFactor);
+            controller.speed = Mathf.MoveTowards(controller.speed, maxSpeed, acceleration * data.speedCorrectionFactor);
         }
 
         Vector3 finalVelocity = controller.velocityDirection.normalized * controller.speed * time;
@@ -278,7 +281,7 @@ public class PlayerAirBorneState : PlayerState {
 
         _airBorneTimer += time;
         if (controller.useGravity && _airBorneTimer.Expired) {
-            controller.gravitySpeed += controller.gravityScale;
+            controller.gravitySpeed += data.gravityScale;
 
             // Counteracts upwards velocity
             if (Mathf.Sign(controller.velocityDirection.normalized.y) == 1)
@@ -297,11 +300,11 @@ public class PlayerAirBorneState : PlayerState {
     private void OnCharge(PlayerController controller, PlayerData data) {
         float time = Time.fixedDeltaTime;
         if (data.input.isCharging) {
-            controller.chargeForce = Vector3.down * controller.speed + Vector3.down * controller.gravityScale * 2;
+            controller.chargeForce = Vector3.down * controller.speed + Vector3.down * data.gravityScale * 2;
         }
 
         // Timer
-        controller.chargeTimer += controller.passiveAirChargeGain * time;  // Unexpirable charge gain
+        controller.chargeTimer += data.passiveAirChargeGain * time;  // Unexpirable charge gain
         controller.chargeRatio = controller.chargeTimer.Ratio;
         controller.expirationTimer.Reset();
 
@@ -319,7 +322,7 @@ public class PlayerAirBorneState : PlayerState {
 
     private void HandleRotation(PlayerController controller, PlayerData data, float time) {
         // Vertical Rotation
-        Vector3 vertRotationAmount = Vector3.right * controller.lookAirVerticalRotationDegsPerSecond * data.input.direction.y * time;
+        Vector3 vertRotationAmount = Vector3.right * data.lookAirVerticalRotationDegsPerSecond * data.input.direction.y * time;
         Quaternion deltaPitchRotation = Quaternion.Euler(vertRotationAmount);
         float angle = 90 - Vector3.Angle(controller.verticalRotation * deltaPitchRotation * Vector3.forward, Vector3.up);
 
@@ -328,22 +331,22 @@ public class PlayerAirBorneState : PlayerState {
             deltaPitchRotation = Quaternion.Euler(vertRotationAmount * 2f);
 
         // Angle cap
-        if (angle <= -controller.minAirborneAngle)
-            controller.verticalRotation = Quaternion.Euler(Vector3.right * controller.minAirborneAngle);
-        else if (angle >= controller.maxAirborneAngle)
-            controller.verticalRotation = Quaternion.Euler(Vector3.right * -controller.maxAirborneAngle);
+        if (angle <= -data.minAirborneAngle)
+            controller.verticalRotation = Quaternion.Euler(Vector3.right * data.minAirborneAngle);
+        else if (angle >= data.maxAirborneAngle)
+            controller.verticalRotation = Quaternion.Euler(Vector3.right * -data.maxAirborneAngle);
         else
             controller.verticalRotation = controller.verticalRotation * deltaPitchRotation;
 
         // Horizontal Rotation
-        float reductionAngle = Mathf.Sign(angle) >= 0 ? controller.maxAirborneAngle : -controller.minAirborneAngle;
+        float reductionAngle = Mathf.Sign(angle) >= 0 ? data.maxAirborneAngle : -data.minAirborneAngle;
         controller.airVerticalReductionAngle = angle / reductionAngle;
         float reductionMultiplier =
-            controller.lookAirMaxRotationalBasedSpeedMultiplier
-            + (1 - controller.lookAirMaxRotationalBasedSpeedMultiplier) * controller.airVerticalReductionAngle;
+            data.lookAirMaxRotationalBasedSpeedMultiplier
+            + (1 - data.lookAirMaxRotationalBasedSpeedMultiplier) * controller.airVerticalReductionAngle;
         Quaternion horizontalDelta = Quaternion.Euler(
             Vector3.up
-                * controller.lookAirHorizontalRotationDegsPerSecond
+                * data.lookAirHorizontalRotationDegsPerSecond
                 * reductionMultiplier
                 * controller.TurnMultiplier
                 * time
@@ -357,11 +360,11 @@ public class PlayerAirBorneState : PlayerState {
             controller.rollRotation,
             Quaternion.Euler(
                 Vector3.forward
-                    * controller.lookAirRollRotationMaxRotationAngle
+                    * data.lookAirRollRotationMaxRotationAngle
                     * -data.input.direction.x
                     * reductionMultiplier
             ),
-            controller.airRollRotationAnglePerSecond * time
+            data.airRollRotationAnglePerSecond * time
         );
 
         controller.finalRotation = controller.horizontalRotation * controller.verticalRotation * controller.rollRotation;

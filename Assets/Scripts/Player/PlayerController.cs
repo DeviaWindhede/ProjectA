@@ -12,49 +12,7 @@ public class PlayerController : MonoBehaviour {
 
     public bool useGravity = true;
 
-    [Min(0)] public float maxAirTime = 0.75f;
-
-    [Header("Velocity")]
-    public float secondsToReachFullGroundSpeed = 1f;
-
-    [Min(0.01f)] public float secondsToReachFullAirSpeed = 0.3f;
-
-    public float maxForwardGroundSpeed = 600f;
-
-    [Min(0.01f)] public float maxForwardAirSpeed = 750f;
-
-    public float gravityScale = 2.5f;
-
-    [Min(0.01f)] public float speedCorrectionFactor = 10;
-
-    [Header("Rotation")]
-    public float lookGroundedRotationDegsPerSecond = 50;
-
-    public float lookAirHorizontalRotationDegsPerSecond = 160;
-
-    public float lookAirVerticalRotationDegsPerSecond = 80;
-
-    [Range(0f, 90f)] public float lookAirRollRotationMaxRotationAngle = 45;
-
-    [Range(0f, 1f)] public float lookAirMaxRotationalBasedSpeedMultiplier = 0.3f;
-
-    [Min(0)] public float rideRotationSpeed = 4;
-
-    [Min(0)] public float chargeRotationSpeedExtra = 70;
-
-    [Min(0.01f)] public float maxTurnMagnitude = 3;
-
-    [SerializeField]
-    private float _airRotationSpeed = 50f; // TODO
-
-    [Range(0f, 80f)] public float maxAirborneAngle = 80;
-
-    [Range(0f, 80f)] public float minAirborneAngle = 55;
-
-    public float followGroundRotationAnglePerSecond = 110f;
-
-    public float airRollRotationAnglePerSecond = 360f;
-
+    // TODO: MOVE TO STATES
     public int rotationRayCount = 10;
 
     [Header("Ground Check")]
@@ -76,23 +34,6 @@ public class PlayerController : MonoBehaviour {
 
     public LayerMask collidableLayer;
 
-    [Header("Charge")]
-    [SerializeField]
-    private float _chargeTime = 1.5f;
-
-    [Min(0)] public float chargeTimeToStopWhenTurningPercentageDenominator = 20f;
-
-    [SerializeField]
-    private float _chargeExpirationTime = 2f;
-
-    [SerializeField]
-    private float _chargeBurnoutTime = 3f;
-
-    [Min(0)] public float boostSpeed = 1000f;
-
-    [Min(0.01f)] public float groundBreakSpeed = 1f;
-
-    [Min(0f)] public float passiveAirChargeGain = 0.1f;
 
     // Component
     [HideInInspector] public Rigidbody body;
@@ -107,7 +48,6 @@ public class PlayerController : MonoBehaviour {
 
     // States
     private PlayerPhysicsState _currentState = PlayerPhysicsState.Airborne;
-    [HideInInspector] public Timer groundedCooldownTimer = new Timer(0.2f);
 
     // Charge
     [HideInInspector] public Vector3 chargeForce;
@@ -120,7 +60,6 @@ public class PlayerController : MonoBehaviour {
     [HideInInspector] public float speed;
     [HideInInspector] public float gravitySpeed;
     [HideInInspector] public Vector3 velocityDirection;
-    [HideInInspector] public float airVerticalReductionAngle;
 
     // Rotation
     [HideInInspector] public Vector3 vecForward;
@@ -229,9 +168,9 @@ public class PlayerController : MonoBehaviour {
         _collider = GetComponent<CapsuleCollider>();
         _data = GetComponent<PlayerData>();
 
-        chargeTimer = new Timer(_chargeTime);
-        expirationTimer = new Timer(_chargeExpirationTime);
-        chargeBurnoutTimer = new Timer(_chargeBurnoutTime);
+        chargeTimer = new Timer(_data._chargeTime);
+        expirationTimer = new Timer(_data._chargeExpirationTime);
+        chargeBurnoutTimer = new Timer(_data._chargeBurnoutTime);
 
         horizontalRotation = Quaternion.Euler(Vector3.up * this.transform.rotation.eulerAngles.y);
         this.transform.rotation = Quaternion.identity;

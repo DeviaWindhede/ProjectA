@@ -158,6 +158,7 @@ public class PlayerController : MonoBehaviour {
         set {
             if (value != _currentState) {
                 _currentState = value;
+                _currentPlayerState.OnExit(this);
                 switch (value) {
                     case PlayerPhysicsState.Grounded:
                         _currentPlayerState = _groundedState;
@@ -235,6 +236,10 @@ public class PlayerController : MonoBehaviour {
     }
     #endregion
 
+    private PlayerAirBorneState _airBorneState;
+    private PlayerGroundedState _groundedState;
+    private PlayerState _currentPlayerState;
+
     // Start is called before the first frame update
     void Awake() {
         body = GetComponent<Rigidbody>();
@@ -244,7 +249,6 @@ public class PlayerController : MonoBehaviour {
         chargeTimer = new Timer(_chargeTime);
         expirationTimer = new Timer(_chargeExpirationTime);
         chargeBurnoutTimer = new Timer(_chargeBurnoutTime);
-        InitializeAirborneTimer();
 
         horizontalRotation = Quaternion.Euler(Vector3.up * this.transform.rotation.eulerAngles.y);
         this.transform.rotation = Quaternion.identity;
@@ -272,24 +276,7 @@ public class PlayerController : MonoBehaviour {
         gravitySpeed = 0;
         velocityDirection = Vector3.zero;
         verticalRotation = Quaternion.identity;
-        _airBorneTimer.Reset();
     }
-
-    private void OnAirborneEnter() {
-        var euler = _mesh.rotation.eulerAngles;
-        _verticalRotation = Quaternion.Euler(euler.x, 0, 0);
-        _rollRotation = Quaternion.Euler(0, 0, euler.z);
-        _gravitySpeed = 0;
-        _velocityDirection = Vector3.zero;
-    }
-
-    public void UpdatePlayerStats() {
-        float time = _airBorneTimer.Time;
-        InitializeAirborneTimer();
-        _airBorneTimer += time;
-    }
-
-    private void InitializeAirborneTimer() { _airBorneTimer = new Timer(_maxAirTime * GlideMultiplier + _data.Stats.Glide / 2); }
 
     void FixedUpdate() {
         float time = Time.fixedDeltaTime;
@@ -343,12 +330,13 @@ public class PlayerController : MonoBehaviour {
 
         HandlePhysicsStateTransitions(time);
 
+        _currentPlayerState.OnUpdate(this, _data);
         switch (this.CurrentState) {
             case PlayerPhysicsState.Grounded:
                 GroundedState(time);
                 break;
             case PlayerPhysicsState.Airborne:
-                AirborneState(time);
+                HandleChargeUI(); // TODO
                 break;
         }
 
@@ -369,6 +357,7 @@ public class PlayerController : MonoBehaviour {
                 {
                     // entering here means the player is trying to move from a surface to a new one or was flying and has now hit a surface
                     Vector3 vec = lastNormal == Vector3.zero ? Vector3.up : lastNormal; // If first time touching ground
+                    if (!IsSurfaceClimbable(groundHitInfo.normal, vec)) CurrentState = PlayerPhysicsState.Airborne;
                 }
             }
         }
@@ -461,104 +450,8 @@ public class PlayerController : MonoBehaviour {
             Quaternion.FromToRotation(Vector3.up, upVec),
             followGroundRotationAnglePerSecond * time
         );
-        _finalRotation = _verticalRotation * _horizontalRotation;
-        _forward = _finalRotation * Vector3.forward;
-    }
-
-    private void AirborneState(float time) {
-        HandleAirborneRotation(time);
-        _velocityDirection = _forward;
-
-        // Speed acceleration
-        // TODO: Make acceleration non-linear
-        float reductionMultiplier = 1;
-        if (_velocityDirection.y > 0) {
-            reductionMultiplier =
-                _lookAirMaxRotationalBasedSpeedMultiplier
-                + (1 - _lookAirMaxRotationalBasedSpeedMultiplier) * (1 - _airVerticalReductionAngle); // TODO: Add variable to this
-        }
-
-        float maxSpeed =
-            _maxForwardAirSpeed * WeightSpeedMultiplier * TopSpeedMultiplier * reductionMultiplier;
-        var acceleration = time / _secondsToReachFullAirSpeed * maxSpeed;
-        _speed += acceleration;
-
-        if (_speed > maxSpeed) {
-            _speed = Mathf.MoveTowards(_speed, maxSpeed, acceleration * _speedCorrectionFactor);
-        }
-
-        Vector3 finalVelocity = _velocityDirection.normalized * _speed * time;
-
-        finalVelocity += Vector3.up * GlideMultiplier * time;
-        finalVelocity += Vector3.down * WeightGlideMultiplier * time;
-
-        _airBorneTimer += time;
-        if (_useGravity && _airBorneTimer.Expired) {
-            _gravitySpeed += _gravityScale;
-
-            // Counteracts upwards velocity
-            if (Mathf.Sign(_velocityDirection.normalized.y) == 1)
-                finalVelocity += Vector3.down * finalVelocity.y;
-
-            finalVelocity += Vector3.down * _gravitySpeed * time;
-        }
-
-        OnCharge(time);
-        finalVelocity += _chargeForce * time;
-
-        _body.velocity = finalVelocity;
-        _chargeForce = Vector3.zero;
-    }
-
-    private void HandleAirborneRotation(float time) {
-        // Vertical Rotation
-        Vector3 vertRotationAmount = Vector3.right * _lookAirVerticalRotationDegsPerSecond * _data.input.direction.y * time;
-        Quaternion deltaPitchRotation = Quaternion.Euler(vertRotationAmount);
-        float angle = 90 - Vector3.Angle(_verticalRotation * deltaPitchRotation * Vector3.forward, Vector3.up);
-
-        // Faster decent angle
-        if (angle <= 0 && Mathf.Sign(_data.input.direction.y) == 1)
-            deltaPitchRotation = Quaternion.Euler(vertRotationAmount * 2f);
-
-        // Angle cap
-        if (angle <= -_minAirborneAngle)
-            _verticalRotation = Quaternion.Euler(Vector3.right * _minAirborneAngle);
-        else if (angle >= _maxAirborneAngle)
-            _verticalRotation = Quaternion.Euler(Vector3.right * -_maxAirborneAngle);
-        else
-            _verticalRotation = _verticalRotation * deltaPitchRotation;
-
-        // Horizontal Rotation
-        float reductionAngle = Mathf.Sign(angle) >= 0 ? _maxAirborneAngle : -_minAirborneAngle;
-        _airVerticalReductionAngle = angle / reductionAngle;
-        float reductionMultiplier =
-            _lookAirMaxRotationalBasedSpeedMultiplier
-            + (1 - _lookAirMaxRotationalBasedSpeedMultiplier) * _airVerticalReductionAngle;
-        Quaternion horizontalDelta = Quaternion.Euler(
-            Vector3.up
-                * _lookAirHorizontalRotationDegsPerSecond
-                * reductionMultiplier
-                * TurnMultiplier
-                * time
-                * _data.input.direction.x
-        );
-        _horizontalRotation = _horizontalRotation * horizontalDelta;
-
-        // Roll Rotation
-        // TODO: Make roll rotation dependent on air friction and torque
-        _rollRotation = Quaternion.RotateTowards(
-            _rollRotation,
-            Quaternion.Euler(
-                Vector3.forward
-                    * _lookAirRollRotationMaxRotationAngle
-                    * -_data.input.direction.x
-                    * reductionMultiplier
-            ),
-            airRollRotationAnglePerSecond * time
-        );
-
-        _finalRotation = _horizontalRotation * _verticalRotation * _rollRotation;
-        _forward = _finalRotation * Vector3.forward;
+        finalRotation = verticalRotation * horizontalRotation;
+        vecForward = finalRotation * Vector3.forward;
     }
 
     // TODO: Was hastily implemented, please refactor
@@ -612,18 +505,18 @@ public class PlayerController : MonoBehaviour {
     private void HandleChargeTimer(float time) {
         if (CurrentState == PlayerPhysicsState.Grounded) {
             if (_data.input.isCharging && !expirationTimer.Expired) // When you can charge
-        {
+            {
                 chargeTimer += time * ChargeMultiplier;
                 chargeRatio = chargeTimer.Ratio;
                 if (chargeTimer.Expired) expirationTimer += time;
-        }
+            }
             else if (chargeRatio != 0) // On release
-        {
+            {
                 chargeRatio = 0;
                 chargeBurnoutTimer.Reset();
                 expirationTimer.Reset();
                 chargeTimer.Reset();
-        }
+            }
 
             if (expirationTimer.Expired) {
                 chargeRatio = 0;

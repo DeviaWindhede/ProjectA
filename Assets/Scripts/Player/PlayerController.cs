@@ -155,10 +155,18 @@ public class PlayerController : MonoBehaviour {
             .GetComponent<PlayerUIHandler>();
     }
 
-
     void FixedUpdate() {
-        float time = Time.fixedDeltaTime;
+        PerformGroundCheckRayCast();
 
+        _currentPlayerState.OnUpdate(this, _data);
+
+        HandleChargeUI(); // TODO move this to Player?
+
+        _mesh.position = finalRotation * _meshPivotPoint + transform.position;
+        _mesh.rotation = finalRotation;
+    }
+
+    private void PerformGroundCheckRayCast() {
         Vector3 groundHitOffset = Vector3.zero;
         if (CurrentState == PlayerPhysicsState.Airborne) {
             groundHitOffset = finalRotation * Vector3.forward;
@@ -170,6 +178,7 @@ public class PlayerController : MonoBehaviour {
             groundRayDistance + groundHitOffset.y,
             collidableLayer
         );
+
         // TODO: Add proper sphere ground check (can also probably be used for average normal rotation on ground state)
         #region Sphere Ground Check TODO
         // float groundHitOffset = _groundSphereOffset + _collider.height / 2;
@@ -205,12 +214,6 @@ public class PlayerController : MonoBehaviour {
                     - _collider.height / 2
                 < this.distanceFromColliderToCountAsGroundHit;
         }
-
-        _currentPlayerState.OnUpdate(this, _data);
-        HandleChargeUI(); // TODO
-
-        _mesh.position = finalRotation * _meshPivotPoint + transform.position;
-        _mesh.rotation = finalRotation;
     }
 
     private void HandleChargeUI() {
@@ -225,7 +228,6 @@ public class PlayerController : MonoBehaviour {
                 _uiHandler.SetFillRatio(chargeTimer.Ratio);
         }
     }
-
 
     private void OnValidate() {
         body = GetComponent<Rigidbody>();

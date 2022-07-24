@@ -95,4 +95,8 @@ public class LobbyController : Singleton<LobbyController> {
             }
         }
     }
+
+    public void StartGame(string sceneName) {
+        localPlayerController.CanStartGame(sceneName);
+    }
 }

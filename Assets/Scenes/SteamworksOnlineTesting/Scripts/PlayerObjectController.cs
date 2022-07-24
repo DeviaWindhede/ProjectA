@@ -22,6 +22,10 @@ public class PlayerObjectController : NetworkBehaviour
         }
     }
 
+    private void Start() {
+        DontDestroyOnLoad(this.gameObject); // TODO interaction with real player
+    }
+
     public override void OnStartAuthority() {
         CmdSetPlayerName(SteamFriends.GetPersonaName().ToString());
         gameObject.name = OBJECT_NAME;
@@ -52,5 +56,14 @@ public class PlayerObjectController : NetworkBehaviour
         if (isClient) {
             LobbyController.Instance.UpdatePlayerList();
         }
+    }
+
+    public void CanStartGame(string sceneName) {
+        if (hasAuthority) CmdCanStartGame(sceneName);
+    }
+
+    [Command]
+    public void CmdCanStartGame(string sceneName) {
+        networkManager.StartGame(sceneName);
     }
 }

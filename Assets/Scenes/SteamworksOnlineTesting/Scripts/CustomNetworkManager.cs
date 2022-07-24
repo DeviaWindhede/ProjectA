@@ -6,11 +6,12 @@ using UnityEngine.SceneManagement;
 using Steamworks;
 
 public class CustomNetworkManager : NetworkManager {
+    public const string LOBBY_SCENE_NAME = "Lobby";
     [SerializeField] private PlayerObjectController _gamePlayerPrefab;
     public List<PlayerObjectController> GamePlayers { get; } = new List<PlayerObjectController>();
 
     public override void OnServerAddPlayer(NetworkConnectionToClient conn) {
-        if (SceneManager.GetActiveScene().name == "Lobby") {
+        if (SceneManager.GetActiveScene().name == LOBBY_SCENE_NAME) {
             PlayerObjectController instance = Instantiate(_gamePlayerPrefab);
             instance.connectionId = conn.connectionId;
             instance.playerIdNumber = GamePlayers.Count + 1;
@@ -21,5 +22,9 @@ public class CustomNetworkManager : NetworkManager {
 
             NetworkServer.AddPlayerForConnection(conn, instance.gameObject);
         }
+    }
+
+    public void StartGame(string sceneName) {
+        ServerChangeScene(sceneName);
     }
 }

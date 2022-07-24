@@ -163,7 +163,7 @@ public class Pickupable : MonoBehaviour
                     closestPlayer = hits[i].collider.GetComponent<Player>();
                 }
             }
-            closestPlayer.GetComponent<PlayerData>().Stats += _stats;
+            closestPlayer.AddStats(_stats);
             Destroy(gameObject); // TODO: Animation
         }
     }

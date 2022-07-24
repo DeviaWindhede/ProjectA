@@ -76,6 +76,10 @@ public class Player : MonoBehaviour, IPlayerInputCallbacks
         }
     }
 
+    public void AddStats(PlayerStats stats) {
+        _data.Stats += stats;
+    }
+
     public void MoveCallback(Vector2 input)
     {
         _inputs.direction.x = input.x;

@@ -12,87 +12,75 @@ public class PlayerController : MonoBehaviour {
 
     public bool useGravity = true;
 
-    [Min(0)] public float maxAirTime = 5f;
+    [Min(0)] public float maxAirTime = 0.75f;
 
     [Header("Velocity")]
-    [SerializeField]
-    private float _secondsToReachFullGroundSpeed = 5;
+    public float secondsToReachFullGroundSpeed = 1f;
 
-    [Min(0.01f)] public float secondsToReachFullAirSpeed = 0.75f;
+    [Min(0.01f)] public float secondsToReachFullAirSpeed = 0.3f;
 
-    [SerializeField]
-    private float _maxForwardGroundSpeed = 300f;
+    public float maxForwardGroundSpeed = 600f;
 
-    [Min(0.01f)] public float maxForwardAirSpeed = 1000f;
+    [Min(0.01f)] public float maxForwardAirSpeed = 750f;
 
-    public float gravityScale = 9.82f;
+    public float gravityScale = 2.5f;
 
     [Min(0.01f)] public float speedCorrectionFactor = 10;
 
     [Header("Rotation")]
-    [SerializeField]
-    private float _lookGroundedRotationDegsPerSecond = 90;
+    public float lookGroundedRotationDegsPerSecond = 50;
 
-    public float lookAirHorizontalRotationDegsPerSecond = 90;
+    public float lookAirHorizontalRotationDegsPerSecond = 160;
 
     public float lookAirVerticalRotationDegsPerSecond = 80;
 
-    [Range(0f, 90f)] public float lookAirRollRotationMaxRotationAngle = 80;
+    [Range(0f, 90f)] public float lookAirRollRotationMaxRotationAngle = 45;
 
-    [Range(0f, 1f)] public float lookAirMaxRotationalBasedSpeedMultiplier = 0.5f;
+    [Range(0f, 1f)] public float lookAirMaxRotationalBasedSpeedMultiplier = 0.3f;
 
-    [SerializeField, Min(0)]
-    private float _rideRotationSpeed = 70;
+    [Min(0)] public float rideRotationSpeed = 4;
 
-    [SerializeField, Min(0)]
-    private float _chargeRotationSpeedExtra = 70;
+    [Min(0)] public float chargeRotationSpeedExtra = 70;
 
-    [SerializeField, Min(0.01f)]
-    private float _maxTurnMagnitude = 3;
+    [Min(0.01f)] public float maxTurnMagnitude = 3;
 
     [SerializeField]
     private float _airRotationSpeed = 50f; // TODO
 
-    [Range(0f, 80f)] public float maxAirborneAngle = 45;
+    [Range(0f, 80f)] public float maxAirborneAngle = 80;
 
-    [Range(0f, 80f)] public float minAirborneAngle = 45;
+    [Range(0f, 80f)] public float minAirborneAngle = 55;
 
-    [SerializeField]
-    private float followGroundRotationAnglePerSecond = 15f;
+    public float followGroundRotationAnglePerSecond = 110f;
 
-    public float airRollRotationAnglePerSecond = 50f;
+    public float airRollRotationAnglePerSecond = 360f;
 
-    [SerializeField]
-    private int rotationRayCount = 10;
+    public int rotationRayCount = 10;
 
     [Header("Ground Check")]
     [SerializeField]
-    private float _groundSphereOffset = 0.5f;
+    private float _groundSphereOffset = 0.15f;
 
     [SerializeField]
-    private float _groundSphereExtraRadius = -0.1f;
+    private float _groundSphereExtraRadius = -0.05f;
 
     [SerializeField, Min(0)]
-    private float distanceFromColliderToCountAsGroundHit = 1.25f;
+    private float distanceFromColliderToCountAsGroundHit = 1.3f;
 
     [SerializeField, Min(0)]
-    private float _maxClimbableSlopeAngle = 45;
+    private float _maxClimbableSlopeAngle = 80;
 
-    [SerializeField]
-    private float _groundRayDistance = 1f;
+    public float groundRayDistance = 2.5f;
 
-    [SerializeField]
-    private float _groundRotationRayExtraDistance = 0.75f;
+    public float groundRotationRayExtraDistance = 0f;
 
-    [SerializeField]
-    private LayerMask _collidableLayer;
+    public LayerMask collidableLayer;
 
     [Header("Charge")]
     [SerializeField]
-    private float _chargeTime = 1f;
+    private float _chargeTime = 1.5f;
 
-    [SerializeField, Min(0)]
-    private float _chargeTimeToStopWhenTurningPercentageDenominator = 20f;
+    [Min(0)] public float chargeTimeToStopWhenTurningPercentageDenominator = 20f;
 
     [SerializeField]
     private float _chargeExpirationTime = 2f;
@@ -100,11 +88,9 @@ public class PlayerController : MonoBehaviour {
     [SerializeField]
     private float _chargeBurnoutTime = 3f;
 
-    [SerializeField, Min(0)]
-    private float _boostSpeed = 300;
+    [Min(0)] public float boostSpeed = 1000f;
 
-    [SerializeField, Min(0.01f)]
-    private float _groundBreakSpeed = 0.5f;
+    [Min(0.01f)] public float groundBreakSpeed = 1f;
 
     [Min(0f)] public float passiveAirChargeGain = 0.1f;
 
@@ -121,7 +107,7 @@ public class PlayerController : MonoBehaviour {
 
     // States
     private PlayerPhysicsState _currentState = PlayerPhysicsState.Airborne;
-    public Timer groundedCooldownTimer = new Timer(0.2f);
+    [HideInInspector] public Timer groundedCooldownTimer = new Timer(0.2f);
 
     // Charge
     [HideInInspector] public Vector3 chargeForce;
@@ -138,9 +124,7 @@ public class PlayerController : MonoBehaviour {
 
     // Rotation
     [HideInInspector] public Vector3 vecForward;
-    private Vector3 Forward {
-        get { return finalRotation * Vector3.forward; }
-    }
+    private Vector3 Forward { get { return finalRotation * Vector3.forward; } }
     [HideInInspector] public Quaternion horizontalRotation;
     [HideInInspector] public Quaternion verticalRotation;
     [HideInInspector] public Quaternion rollRotation;
@@ -159,10 +143,9 @@ public class PlayerController : MonoBehaviour {
             if (value != _currentState) {
                 _currentState = value;
                 _currentPlayerState.OnExit(this);
-                switch (value) {
+                switch (value) { // TODO
                     case PlayerPhysicsState.Grounded:
                         _currentPlayerState = _groundedState;
-                        OnGroundedEnter();
                         break;
                     case PlayerPhysicsState.Airborne:
                         _currentPlayerState = _airBorneState;
@@ -271,12 +254,6 @@ public class PlayerController : MonoBehaviour {
             .GetComponent<PlayerUIHandler>();
     }
 
-    private void OnGroundedEnter() {
-        velocityDirection.y = 0;
-        gravitySpeed = 0;
-        velocityDirection = Vector3.zero;
-        verticalRotation = Quaternion.identity;
-    }
 
     void FixedUpdate() {
         float time = Time.fixedDeltaTime;
@@ -289,8 +266,8 @@ public class PlayerController : MonoBehaviour {
             transform.position + groundHitOffset,
             Vector3.down,
             out groundHitInfo,
-            _groundRayDistance + groundHitOffset.y,
-            _collidableLayer
+            groundRayDistance + groundHitOffset.y,
+            collidableLayer
         );
         // TODO: Add proper sphere ground check (can also probably be used for average normal rotation on ground state)
         #region Sphere Ground Check TODO
@@ -328,206 +305,11 @@ public class PlayerController : MonoBehaviour {
                 < this.distanceFromColliderToCountAsGroundHit;
         }
 
-        HandlePhysicsStateTransitions(time);
-
         _currentPlayerState.OnUpdate(this, _data);
-        switch (this.CurrentState) {
-            case PlayerPhysicsState.Grounded:
-                GroundedState(time);
-                break;
-            case PlayerPhysicsState.Airborne:
-                HandleChargeUI(); // TODO
-                break;
-        }
+        HandleChargeUI(); // TODO
 
         _mesh.position = finalRotation * _meshPivotPoint + transform.position;
         _mesh.rotation = finalRotation;
-    }
-
-    private void HandlePhysicsStateTransitions(float time) {
-        if (!groundHit) {
-            CurrentState = PlayerPhysicsState.Airborne;
-            groundedCooldownTimer.Reset();
-            lastNormal = Vector3.zero;
-            currentNormal = Vector3.zero;
-        }
-        else {
-            if (CurrentState == PlayerPhysicsState.Grounded) {
-                if (lastNormal != currentNormal) // currentNormal will always have a value when groundHit is truthy
-                {
-                    // entering here means the player is trying to move from a surface to a new one or was flying and has now hit a surface
-                    Vector3 vec = lastNormal == Vector3.zero ? Vector3.up : lastNormal; // If first time touching ground
-                    if (!IsSurfaceClimbable(groundHitInfo.normal, vec)) CurrentState = PlayerPhysicsState.Airborne;
-                }
-            }
-        }
-    }
-
-    private void GroundedState(float time) {
-        HandleGroundedRotation(time);
-
-        // Horizontal Velocity
-        Vector3 horizontalDirection = horizontalRotation * Vector3.forward;
-        Quaternion rotationExtra = Quaternion.Euler(
-            Vector3.up
-                * 45
-                / (0.01f + _rideRotationSpeed)
-                * Mathf.Sign(GetNegativeAngle(velocityDirection, horizontalDirection))
-        );
-        velocityDirection +=
-            horizontalRotation
-            * rotationExtra
-            * Vector3.forward
-            * _rideRotationSpeed
-            * WeightTurnMultiplier
-            * time;
-        if (velocityDirection.magnitude > _maxTurnMagnitude) {
-            velocityDirection = velocityDirection.normalized * _maxTurnMagnitude;
-        }
-
-        // Speed acceleration
-        // TODO: Make acceleration non-linear
-        float maxSpeed = _maxForwardGroundSpeed * WeightSpeedMultiplier * TopSpeedMultiplier;
-        var acceleration = time / _secondsToReachFullGroundSpeed * maxSpeed;
-        speed += acceleration;
-        if (speed > maxSpeed) {
-            speed = Mathf.MoveTowards(speed, maxSpeed, acceleration * speedCorrectionFactor);
-        }
-
-        // TODO: Implement breaking (_data.input.isBreaking)
-
-        OnCharge(time);
-
-        Vector3 finalVelocity = verticalRotation * velocityDirection.normalized * speed * time;
-        body.velocity = finalVelocity;
-    }
-
-    private void HandleGroundedRotation(float time) {
-        // Horizontal Rotation
-        Quaternion horizontalDelta = Quaternion.Euler(
-            Vector3.up
-                * _lookGroundedRotationDegsPerSecond
-                * TurnMultiplier
-                * time
-                * _data.input.direction.x
-                + Vector3.up
-                    * _chargeRotationSpeedExtra
-                    * time
-                    * _data.input.direction.x
-                    * (_data.input.isCharging ? 1 : 0)
-        );
-        horizontalRotation = horizontalRotation * horizontalDelta;
-
-        Vector3 averageNormal = groundHitInfo.normal;
-        float angleIncrement = 360f / rotationRayCount;
-        int incrementCount = 1;
-        for (int i = 0; i < rotationRayCount; i++) {
-            RaycastHit rayData;
-            var offset =
-                finalRotation * Quaternion.Euler(0, -angleIncrement * i, 0) * Vector3.forward;
-            if (
-                Physics.Raycast(
-                    transform.position + offset,
-                    Vector3.down,
-                    out rayData,
-                    _groundRayDistance + _groundRotationRayExtraDistance,
-                    _collidableLayer
-                )
-            ) {
-                Vector3 vec = currentNormal == Vector3.zero ? Vector3.up : currentNormal; // If first time touching ground
-                if (IsSurfaceClimbable(rayData.normal, vec)) {
-                    averageNormal += rayData.normal;
-                    incrementCount++;
-                }
-            }
-        }
-        averageNormal /= incrementCount;
-
-        Vector3 upVec = groundHit ? averageNormal : Vector3.up;
-        // TODO: Increase speed the larger the angle diff is
-        verticalRotation = Quaternion.RotateTowards(
-            verticalRotation,
-            Quaternion.FromToRotation(Vector3.up, upVec),
-            followGroundRotationAnglePerSecond * time
-        );
-        finalRotation = verticalRotation * horizontalRotation;
-        vecForward = finalRotation * Vector3.forward;
-    }
-
-    // TODO: Was hastily implemented, please refactor
-    private void OnCharge(float time) //state machine?
-    {
-        HandleChargeVelocity(time);
-        HandleChargeTimer(time);
-        HandleChargeUI();
-    }
-
-    private void HandleChargeVelocity(float time) {
-        if (_data.input.isCharging) {
-            switch (CurrentState) {
-                case PlayerPhysicsState.Grounded:
-                    var acceleration =
-                        time
-                        / _secondsToReachFullGroundSpeed
-                        * _maxForwardGroundSpeed
-                        * WeightSpeedMultiplier
-                        * TopSpeedMultiplier;
-                    // TODO: create acceleration member variable
-                    speed -= acceleration; // Remove ground speed addition
-
-                    Vector3 horizontalDirection = horizontalRotation * Vector3.forward;
-
-                    float dot = Mathf.Clamp01(
-                        Vector3.Dot(horizontalDirection.normalized, velocityDirection.normalized)
-                    );
-                    float stopOnTurn = 1 + _chargeTimeToStopWhenTurningPercentageDenominator * (1 - dot);
-                    float maxDelta = acceleration * _groundBreakSpeed / stopOnTurn * WeightChargeMultiplier;
-
-                    speed = Mathf.MoveTowards(speed, 0, maxDelta);
-
-                    break;
-                case PlayerPhysicsState.Airborne:
-                    break;
-            }
-        }
-        else if (chargeRatio != 0 && CurrentState == PlayerPhysicsState.Grounded) {
-            float boostSpeed = _boostSpeed * Mathf.Clamp01(chargeRatio) * BoostMultiplier;
-
-            float limitMultiplier = 1.5f;
-            float maxSpeed = _maxForwardGroundSpeed * WeightSpeedMultiplier * TopSpeedMultiplier;
-            if (speed <= maxSpeed * limitMultiplier)
-                speed += boostSpeed;
-
-            velocityDirection = horizontalRotation * Vector3.forward;
-        }
-    }
-
-    private void HandleChargeTimer(float time) {
-        if (CurrentState == PlayerPhysicsState.Grounded) {
-            if (_data.input.isCharging && !expirationTimer.Expired) // When you can charge
-            {
-                chargeTimer += time * ChargeMultiplier;
-                chargeRatio = chargeTimer.Ratio;
-                if (chargeTimer.Expired) expirationTimer += time;
-            }
-            else if (chargeRatio != 0) // On release
-            {
-                chargeRatio = 0;
-                chargeBurnoutTimer.Reset();
-                expirationTimer.Reset();
-                chargeTimer.Reset();
-            }
-
-            if (expirationTimer.Expired) {
-                chargeRatio = 0;
-                chargeBurnoutTimer += time;
-                if (chargeBurnoutTimer.Expired) {
-                    chargeBurnoutTimer.Reset();
-                    expirationTimer.Reset();
-                    chargeTimer.Reset();
-                }
-            }
-        }
     }
 
     private void HandleChargeUI() {
@@ -557,7 +339,7 @@ public class PlayerController : MonoBehaviour {
         );
 
         if (CurrentState == PlayerPhysicsState.Grounded) {
-            Gizmos.DrawRay(transform.position, Vector3.down * _groundRayDistance);
+            Gizmos.DrawRay(transform.position, Vector3.down * groundRayDistance);
 
             Gizmos.color = Color.blue;
             float angleIncrement = 360f / rotationRayCount;
@@ -566,7 +348,7 @@ public class PlayerController : MonoBehaviour {
                     finalRotation * Quaternion.Euler(0, -angleIncrement * i, 0) * Vector3.forward;
                 Gizmos.DrawRay(
                     transform.position + offset,
-                    Vector3.down * (_groundRayDistance + _groundRotationRayExtraDistance)
+                    Vector3.down * (groundRayDistance + groundRotationRayExtraDistance)
                 );
             }
             Gizmos.color = Color.yellow;
@@ -576,7 +358,7 @@ public class PlayerController : MonoBehaviour {
             var offset = finalRotation * Vector3.forward;
             Gizmos.DrawRay(
                 transform.position + offset,
-                Vector3.down * (_groundRayDistance + offset.y)
+                Vector3.down * (groundRayDistance + offset.y)
             );
         }
     }

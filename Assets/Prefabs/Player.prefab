@@ -665,24 +665,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _mesh: {fileID: 5232675846030945889}
   useGravity: 1
-  maxAirTime: 5
-  _secondsToReachFullGroundSpeed: 1
-  secondsToReachFullAirSpeed: 0.75
-  _maxForwardGroundSpeed: 600
-  maxForwardAirSpeed: 1000
-  gravityScale: 9.82
+  maxAirTime: 0.75
+  secondsToReachFullGroundSpeed: 1
+  secondsToReachFullAirSpeed: 0.3
+  maxForwardGroundSpeed: 600
+  maxForwardAirSpeed: 750
+  gravityScale: 2.5
   speedCorrectionFactor: 10
-  _lookGroundedRotationDegsPerSecond: 50
-  lookAirHorizontalRotationDegsPerSecond: 90
+  lookGroundedRotationDegsPerSecond: 50
+  lookAirHorizontalRotationDegsPerSecond: 160
   lookAirVerticalRotationDegsPerSecond: 80
-  lookAirRollRotationMaxRotationAngle: 80
-  lookAirMaxRotationalBasedSpeedMultiplier: 0.5
-  _rideRotationSpeed: 4
-  _chargeRotationSpeedExtra: 70
-  _maxTurnMagnitude: 3
+  lookAirRollRotationMaxRotationAngle: 45
+  lookAirMaxRotationalBasedSpeedMultiplier: 0.3
+  rideRotationSpeed: 4
+  chargeRotationSpeedExtra: 70
+  maxTurnMagnitude: 3
   _airRotationSpeed: 50
-  maxAirborneAngle: 45
-  minAirborneAngle: 45
+  maxAirborneAngle: 80
+  minAirborneAngle: 55
   followGroundRotationAnglePerSecond: 110
   airRollRotationAnglePerSecond: 360
   rotationRayCount: 10
@@ -690,17 +690,17 @@ MonoBehaviour:
   _groundSphereExtraRadius: -0.05
   distanceFromColliderToCountAsGroundHit: 1.3
   _maxClimbableSlopeAngle: 80
-  _groundRayDistance: 2.5
-  _groundRotationRayExtraDistance: 0
-  _collidableLayer:
+  groundRayDistance: 2.5
+  groundRotationRayExtraDistance: 0
+  collidableLayer:
     serializedVersion: 2
     m_Bits: 64
   _chargeTime: 1.5
-  _chargeTimeToStopWhenTurningPercentageDenominator: 20
+  chargeTimeToStopWhenTurningPercentageDenominator: 20
   _chargeExpirationTime: 2
   _chargeBurnoutTime: 3
-  _boostSpeed: 1000
-  _groundBreakSpeed: 1
+  boostSpeed: 1000
+  groundBreakSpeed: 1
   passiveAirChargeGain: 0.1
   body: {fileID: 5698332844854072373}
   groundHit: 0

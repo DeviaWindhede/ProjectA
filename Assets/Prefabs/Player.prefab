@@ -543,6 +543,7 @@ GameObject:
   - component: {fileID: 5698332844854072369}
   - component: {fileID: 5698332844854072373}
   - component: {fileID: 5698332844854072378}
+  - component: {fileID: 820634912661608836}
   - component: {fileID: 5698332844854072368}
   - component: {fileID: 5811808126038970196}
   - component: {fileID: 5411235343513342598}
@@ -601,6 +602,18 @@ MonoBehaviour:
   _playerIndex: 0
   _reversedFlyControls: 0
   _followVirtualCamera: {fileID: 8336621076948441328}
+--- !u!114 &820634912661608836
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5698332844854072379}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b191cee8fc52cf46b6ba3d7a52af9ee, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
   _stats:
     _boost: 0
     _charge: 0
@@ -652,16 +665,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _mesh: {fileID: 5232675846030945889}
   _useGravity: 1
-  _playerStats:
-    _boost: 0
-    _charge: 0
-    _defence: 0
-    _glide: 0
-    _health: 0
-    _offence: 0
-    _topSpeed: 0
-    _turn: 0
-    _weight: 0
   _maxAirTime: 0.75
   _secondsToReachFullGroundSpeed: 1
   _secondsToReachFullAirSpeed: 0.3

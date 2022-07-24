@@ -664,25 +664,25 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _mesh: {fileID: 5232675846030945889}
-  _useGravity: 1
-  _maxAirTime: 0.75
+  useGravity: 1
+  maxAirTime: 5
   _secondsToReachFullGroundSpeed: 1
-  _secondsToReachFullAirSpeed: 0.3
+  secondsToReachFullAirSpeed: 0.75
   _maxForwardGroundSpeed: 600
-  _maxForwardAirSpeed: 750
-  _gravityScale: 2.5
-  _speedCorrectionFactor: 10
+  maxForwardAirSpeed: 1000
+  gravityScale: 9.82
+  speedCorrectionFactor: 10
   _lookGroundedRotationDegsPerSecond: 50
-  _lookAirHorizontalRotationDegsPerSecond: 160
-  _lookAirVerticalRotationDegsPerSecond: 80
-  _lookAirRollRotationMaxRotationAngle: 45
-  _lookAirMaxRotationalBasedSpeedMultiplier: 0.3
+  lookAirHorizontalRotationDegsPerSecond: 90
+  lookAirVerticalRotationDegsPerSecond: 80
+  lookAirRollRotationMaxRotationAngle: 80
+  lookAirMaxRotationalBasedSpeedMultiplier: 0.5
   _rideRotationSpeed: 4
   _chargeRotationSpeedExtra: 70
   _maxTurnMagnitude: 3
   _airRotationSpeed: 50
-  _maxAirborneAngle: 80
-  _minAirborneAngle: 55
+  maxAirborneAngle: 45
+  minAirborneAngle: 45
   followGroundRotationAnglePerSecond: 110
   airRollRotationAnglePerSecond: 360
   rotationRayCount: 10
@@ -701,7 +701,23 @@ MonoBehaviour:
   _chargeBurnoutTime: 3
   _boostSpeed: 1000
   _groundBreakSpeed: 1
-  _passiveAirChargeGain: 0.1
+  passiveAirChargeGain: 0.1
+  body: {fileID: 5698332844854072373}
+  groundHit: 0
+  countAsGroundHit: 0
+  lastNormal: {x: 0, y: 0, z: 0}
+  currentNormal: {x: 0, y: 0, z: 0}
+  chargeForce: {x: 0, y: 0, z: 0}
+  chargeRatio: 0
+  speed: 0
+  gravitySpeed: 0
+  velocityDirection: {x: 0, y: 0, z: 0}
+  airVerticalReductionAngle: 0
+  vecForward: {x: 0, y: 0, z: 0}
+  horizontalRotation: {x: 0, y: 0, z: 0, w: 0}
+  verticalRotation: {x: 0, y: 0, z: 0, w: 0}
+  rollRotation: {x: 0, y: 0, z: 0, w: 0}
+  finalRotation: {x: 0, y: 0, z: 0, w: 0}
 --- !u!1 &8190405054996486659
 GameObject:
   m_ObjectHideFlags: 0

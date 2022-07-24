@@ -14,9 +14,6 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     private bool _useGravity = true;
 
-    [SerializeField]
-    private PlayerStats _playerStats;
-
     [SerializeField, Min(0)] private float _maxAirTime = 5f;
 
     [Header("Velocity")]
@@ -132,6 +129,7 @@ public class PlayerController : MonoBehaviour
     private Rigidbody _body;
     private CapsuleCollider _collider;
     private PlayerUIHandler _uiHandler;
+    private PlayerData _data;
     private bool _groundHit;
     private bool _countAsGroundHit;
     private RaycastHit _groundHitInfo;
@@ -203,10 +201,10 @@ public class PlayerController : MonoBehaviour
         get
         {
             float weightMultiplier = 1f;
-            if (_playerStats.Weight > 2)
-                weightMultiplier = (30f + (float)_playerStats.Weight) / 32f;
-            else if (_playerStats.Weight < 2)
-                weightMultiplier = (62f + (float)_playerStats.Weight) / 64f;
+            if (_data.Stats.Weight > 2)
+                weightMultiplier = (30f + (float)_data.Stats.Weight) / 32f;
+            else if (_data.Stats.Weight < 2)
+                weightMultiplier = (62f + (float)_data.Stats.Weight) / 64f;
             return weightMultiplier;
         }
     }
@@ -217,45 +215,45 @@ public class PlayerController : MonoBehaviour
     // Min speed = 1/5x / 0.2x
     private float TopSpeedMultiplier
     {
-        get { return GetStatMultiplierValue(_playerStats.TopSpeed, 8, 20); }
+        get { return GetStatMultiplierValue(_data.Stats.TopSpeed, 8, 20); }
     }
     private float BoostMultiplier
     {
-        get { return GetStatMultiplierValue(_playerStats.Boost, 8, 20); }
+        get { return GetStatMultiplierValue(_data.Stats.Boost, 8, 20); }
     }
     private float ChargeMultiplier
     {
-        get { return GetStatMultiplierValue(_playerStats.Charge, 8, 20); }
+        get { return GetStatMultiplierValue(_data.Stats.Charge, 8, 20); }
     }
     private float TurnMultiplier
     {
-        get { return GetStatMultiplierValue(_playerStats.Turn, 6, 20); }
+        get { return GetStatMultiplierValue(_data.Stats.Turn, 6, 20); }
     }
     private float GlideMultiplier
     {
-        get { return GetStatMultiplierValue(_playerStats.Glide, 16, 32); }
+        get { return GetStatMultiplierValue(_data.Stats.Glide, 16, 32); }
     }
 
     private float WeightChargeMultiplier
     {
-        get { return GetStatMultiplierValue(_playerStats.Weight, 8, 20); }
+        get { return GetStatMultiplierValue(_data.Stats.Weight, 8, 20); }
     }
     private float WeightGlideMultiplier
     {
-        get { return GetStatMultiplierValue(_playerStats.Weight, 32, 64); }
+        get { return GetStatMultiplierValue(_data.Stats.Weight, 32, 64); }
     }
     private float WeightTurnMultiplier
     {
-        get { return GetStatMultiplierValue(_playerStats.Weight, 4, 16); }
+        get { return GetStatMultiplierValue(_data.Stats.Weight, 4, 16); }
     }
 
     private float GetStatMultiplierValue(int stat, int overDefault, int underDefault)
     {
         int defaultValue = 2;
         float multiplier = 1f;
-        if (_playerStats.Weight > defaultValue)
+        if (_data.Stats.Weight > defaultValue)
             multiplier = (float)(overDefault - defaultValue + stat) / (float)overDefault;
-        else if (_playerStats.Weight < defaultValue)
+        else if (_data.Stats.Weight < defaultValue)
             multiplier = (float)(underDefault - defaultValue + stat) / (float)underDefault;
         return multiplier;
     }
@@ -293,6 +291,8 @@ public class PlayerController : MonoBehaviour
     {
         _body = GetComponent<Rigidbody>();
         _collider = GetComponent<CapsuleCollider>();
+        _data = GetComponent<PlayerData>();
+        _data.OnStatUpdate += () => UpdatePlayerStats();
 
         _chargeTimer = new Timer(_chargeTime);
         _expirationTimer = new Timer(_chargeExpirationTime);
@@ -340,16 +340,14 @@ public class PlayerController : MonoBehaviour
         _inputs = inputs;
     }
 
-    public void UpdatePlayerStats(PlayerStats stats)
+    public void UpdatePlayerStats()
     {
-        _playerStats = stats;
-
         float time = _airBorneTimer.Time;
         InitializeAirborneTimer();
         _airBorneTimer += time;
     }
 
-    private void InitializeAirborneTimer() { _airBorneTimer = new Timer(_maxAirTime * GlideMultiplier + _playerStats.Glide / 2); }
+    private void InitializeAirborneTimer() { _airBorneTimer = new Timer(_maxAirTime * GlideMultiplier + _data.Stats.Glide / 2); }
 
     void FixedUpdate()
     {

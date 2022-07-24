@@ -12,7 +12,7 @@ public struct PlayerInputValues
     public bool isBreaking;
 }
 
-[RequireComponent(typeof(PlayerController))]
+[RequireComponent(typeof(PlayerController), typeof(PlayerData))]
 public class Player : MonoBehaviour, IPlayerInputCallbacks
 {
     [SerializeField]
@@ -23,10 +23,6 @@ public class Player : MonoBehaviour, IPlayerInputCallbacks
 
     [SerializeField]
     private Transform _followVirtualCamera;
-
-    [SerializeField]
-    private PlayerStats _stats;
-
 
     private PlayerController _playerController;
     private PlayerInputActionMapping _inputMapping;
@@ -46,8 +42,8 @@ public class Player : MonoBehaviour, IPlayerInputCallbacks
     void Awake()
     {
         _playerController = GetComponent<PlayerController>();
+
         SetupInputs();
-        _playerController.UpdatePlayerStats(_stats);
     }
 
     private void SetupInputs()
@@ -70,12 +66,6 @@ public class Player : MonoBehaviour, IPlayerInputCallbacks
     private void UpdateControllerInput()
     {
         _playerController.UpdateInputs(_inputs);
-    }
-
-    public void UpdatePlayerStats(PlayerStats stats)
-    {
-        _stats += stats;
-        _playerController.UpdatePlayerStats(_stats);
     }
 
     private void InstantiateInputHandler(Input input)

@@ -6,7 +6,7 @@ public class PlayerData : MonoBehaviour {
     public delegate void PlayerDataUpdate();
     public event PlayerDataUpdate OnStatUpdate;
 
-    public PlayerInputValues input;
+    public PlayerInputValues input = new PlayerInputValues();
 
     [SerializeField] private PlayerStats _stats;
     public PlayerStats Stats {

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
+﻿using UnityEngine;
 using static PlayerController;
 
 public class PlayerAirBorneState : PlayerState {
@@ -49,7 +44,7 @@ public class PlayerAirBorneState : PlayerState {
         float time = Time.fixedDeltaTime;
         _groundedCooldownTimer.Time += time; // Cooldown until player is able to touch ground again
         if (_groundedCooldownTimer.Expired) {
-            if (controller.countAsGroundHit && controller.IsSurfaceClimbable(controller.groundHitInfo.normal, Vector3.up)) {
+            if (controller.countAsGroundHit && HelperFunctions.IsSurfaceClimbable(controller.groundHitInfo.normal, Vector3.up, data.maxClimbableSlopeAngle)) {
                 controller.CurrentState = PlayerPhysicsState.Grounded;
                 return;
             }

@@ -18,6 +18,7 @@ public class PlayerData : MonoBehaviour {
     }
 
     [Min(0)] public float maxAirTime = 0.75f;
+    [Min(0)] public float maxClimbableSlopeAngle = 80;
 
     [Header("Velocity")]
     [Min(0f)] public float secondsToReachFullGroundSpeed = 1f;

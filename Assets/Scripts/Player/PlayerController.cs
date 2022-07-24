@@ -7,33 +7,17 @@ using static HelperFunctions;
 
 [RequireComponent(typeof(Rigidbody))]
 public class PlayerController : MonoBehaviour {
-    [SerializeField]
-    private Transform _mesh;
-
+    [SerializeField] private Transform _mesh;
     public bool useGravity = true;
 
-    // TODO: MOVE TO STATES
-    public int rotationRayCount = 10;
-
     [Header("Ground Check")]
-    [SerializeField]
-    private float _groundSphereOffset = 0.15f;
-
-    [SerializeField]
-    private float _groundSphereExtraRadius = -0.05f;
-
-    [SerializeField, Min(0)]
-    private float distanceFromColliderToCountAsGroundHit = 1.3f;
-
-    [SerializeField, Min(0)]
-    private float _maxClimbableSlopeAngle = 80;
+    [SerializeField] private float _groundSphereOffset = 0.15f;
+    [SerializeField] private float _groundSphereExtraRadius = -0.05f;
+    [SerializeField, Min(0)] private float distanceFromColliderToCountAsGroundHit = 1.3f;
 
     public float groundRayDistance = 2.5f;
-
     public float groundRotationRayExtraDistance = 0f;
-
     public LayerMask collidableLayer;
-
 
     // Component
     [HideInInspector] public Rigidbody body;
@@ -49,6 +33,9 @@ public class PlayerController : MonoBehaviour {
     // States
     private PlayerPhysicsState _currentState = PlayerPhysicsState.Airborne;
 
+    // TODO: MOVE TO STATES
+    public int rotationRayCount = 10;
+
     // Charge
     [HideInInspector] public Vector3 chargeForce;
     [HideInInspector] public Timer chargeTimer;
@@ -62,38 +49,13 @@ public class PlayerController : MonoBehaviour {
     [HideInInspector] public Vector3 velocityDirection;
 
     // Rotation
+    private Vector3 _meshPivotPoint;
     [HideInInspector] public Vector3 vecForward;
-    private Vector3 Forward { get { return finalRotation * Vector3.forward; } }
     [HideInInspector] public Quaternion horizontalRotation;
     [HideInInspector] public Quaternion verticalRotation;
     [HideInInspector] public Quaternion rollRotation;
     [HideInInspector] public Quaternion finalRotation = new Quaternion();
-    private Vector3 _meshPivotPoint;
     public Quaternion MeshRotation { get { return _mesh.rotation; } }
-
-    public enum PlayerPhysicsState {
-        Grounded,
-        Airborne,
-    }
-
-    public PlayerPhysicsState CurrentState {
-        get { return _currentState; }
-        set {
-            if (value != _currentState) {
-                _currentState = value;
-                _currentPlayerState.OnExit(this);
-                switch (value) { // TODO
-                    case PlayerPhysicsState.Grounded:
-                        _currentPlayerState = _groundedState;
-                        break;
-                    case PlayerPhysicsState.Airborne:
-                        _currentPlayerState = _airBorneState;
-                        break;
-                }
-                _currentPlayerState.OnEnter(this);
-            }
-        }
-    }
 
     // Stat scalars
 
@@ -134,29 +96,29 @@ public class PlayerController : MonoBehaviour {
         return multiplier;
     }
 
-    #region Helpers
-    private bool ShouldSlide {
-        get {
-            var left = Vector3.Cross(groundHitInfo.normal, Vector3.up);
-            var downhill = Vector3.Cross(groundHitInfo.normal, left);
-            var dot = Vector3.Dot(downhill, transform.forward);
-            return dot >= -0.2f;
+    // States
+    public enum PlayerPhysicsState {
+        Grounded,
+        Airborne,
+    }
+    public PlayerPhysicsState CurrentState {
+        get { return _currentState; }
+        set {
+            if (value != _currentState) {
+                _currentState = value;
+                _currentPlayerState.OnExit(this);
+                switch (value) { // TODO
+                    case PlayerPhysicsState.Grounded:
+                        _currentPlayerState = _groundedState;
+                        break;
+                    case PlayerPhysicsState.Airborne:
+                        _currentPlayerState = _airBorneState;
+                        break;
+                }
+                _currentPlayerState.OnEnter(this);
+            }
         }
     }
-
-    public bool IsSurfaceClimbable(Vector3 vec1, Vector3 vec2) {
-        float angle = Vector3.Angle(vec1, vec2);
-        return angle < _maxClimbableSlopeAngle;
-    }
-
-    public float GetNegativeAngle(Vector3 vectorA, Vector3 vectorB) {
-        float angle = Vector3.Angle(vectorA, vectorB);
-        Vector3 cross = Vector3.Cross(vectorA, vectorB);
-        if (cross.y < 0)
-            angle = -angle;
-        return angle;
-    }
-    #endregion
 
     private PlayerAirBorneState _airBorneState;
     private PlayerGroundedState _groundedState;

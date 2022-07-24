@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
+﻿using UnityEngine;
 using static PlayerController;
 
 public class PlayerGroundedState : PlayerState {
@@ -31,7 +26,7 @@ public class PlayerGroundedState : PlayerState {
             {
                 // entering here means the player is trying to move from a surface to a new one or was flying and has now hit a surface
                 Vector3 vec = controller.lastNormal == Vector3.zero ? Vector3.up : controller.lastNormal; // If first time touching ground
-                if (!controller.IsSurfaceClimbable(controller.groundHitInfo.normal, vec)) {
+                if (!HelperFunctions.IsSurfaceClimbable(controller.groundHitInfo.normal, vec, data.maxClimbableSlopeAngle)) {
                     controller.CurrentState = PlayerPhysicsState.Airborne;
                     return;
                 }
@@ -48,7 +43,7 @@ public class PlayerGroundedState : PlayerState {
             Vector3.up
                 * 45
                 / (0.01f + data.rideRotationSpeed)
-                * Mathf.Sign(controller.GetNegativeAngle(controller.velocityDirection, horizontalDirection))
+                * Mathf.Sign(HelperFunctions.GetNegativeAngle(controller.velocityDirection, horizontalDirection))
         );
         controller.velocityDirection +=
             controller.horizontalRotation
@@ -137,7 +132,6 @@ public class PlayerGroundedState : PlayerState {
         }
     }
 
-    private int rotationRayCount = 10;
     private void HandleGroundedRotation(PlayerController controller, PlayerData data) {
         float time = Time.fixedDeltaTime;
         // Horizontal Rotation
@@ -172,7 +166,7 @@ public class PlayerGroundedState : PlayerState {
                 )
             ) {
                 Vector3 vec = controller.currentNormal == Vector3.zero ? Vector3.up : controller.currentNormal; // If first time touching ground
-                if (controller.IsSurfaceClimbable(rayData.normal, vec)) {
+                if (HelperFunctions.IsSurfaceClimbable(rayData.normal, vec, data.maxClimbableSlopeAngle)) {
                     averageNormal += rayData.normal;
                     incrementCount++;
                 }

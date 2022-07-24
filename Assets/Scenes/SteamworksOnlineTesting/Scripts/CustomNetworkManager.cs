@@ -27,4 +27,9 @@ public class CustomNetworkManager : NetworkManager {
     public void StartGame(string sceneName) {
         ServerChangeScene(sceneName);
     }
+
+    public override void OnApplicationQuit() {
+        base.OnApplicationQuit();
+        NetworkServer.DisconnectAll();
+    }
 }

@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Linq;
+using Mirror;
 using static HelperFunctions;
 
 [RequireComponent(typeof(Rigidbody))]
-public class PlayerController : MonoBehaviour {
+public class PlayerController : NetworkBehaviour {
     [SerializeField] private Transform _mesh;
     public bool useGravity = true;
 
@@ -149,21 +150,26 @@ public class PlayerController : MonoBehaviour {
 
     void Start() {
         int playerIndex = GetComponent<Player>().PlayerIndex;
-        _uiHandler = GameObject
-            .FindObjectOfType<CameraManager>()
-            .GetCamera(playerIndex)
-            .GetComponent<PlayerUIHandler>();
+        //var playerManager = FindObjectOfType<OnlinePlayerManager>();
+        //if (playerManager && hasAuthority) {
+        //    _uiHandler = playerManager
+        //        .GetCamera(playerIndex)
+        //        .GetComponent<PlayerUIHandler>();
+        //}
     }
 
+
     void FixedUpdate() {
-        PerformGroundCheckRayCast();
+        if (hasAuthority) {
+            PerformGroundCheckRayCast();
 
-        _currentPlayerState.OnUpdate(this, _data);
+            _currentPlayerState.OnUpdate(this, _data);
 
-        HandleChargeUI(); // TODO move this to Player?
+            HandleChargeUI(); // TODO move this to Player?
 
-        _mesh.position = finalRotation * _meshPivotPoint + transform.position;
-        _mesh.rotation = finalRotation;
+            _mesh.position = finalRotation * _meshPivotPoint + transform.position;
+            _mesh.rotation = finalRotation;
+        }
     }
 
     private void PerformGroundCheckRayCast() {

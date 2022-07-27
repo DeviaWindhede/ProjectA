@@ -4,10 +4,10 @@ using UnityEngine;
 using Mirror;
 using Steamworks;
 
-public class PlayerObjectController : NetworkBehaviour
-{
+public class PlayerObjectController : NetworkBehaviour {
+    [SerializeField] private GameObject test;
     public const string OBJECT_NAME = "LocalGamePlayer";
-
+    [HideInInspector] public GameObject playerObject;
     [SyncVar] public int connectionId;
     [SyncVar] public int playerIdNumber;
     [SyncVar] public ulong playerSteamId;

@@ -60,6 +60,8 @@ public class LobbyController : Singleton<LobbyController> {
         }
     }
     private void InstantiatePlayerItem(PlayerObjectController player) {
+        if (!playerListItemPrefab) return;
+
         GameObject go = Instantiate(playerListItemPrefab) as GameObject;
         PlayerListItem playerItem = go.GetComponent<PlayerListItem>();
 

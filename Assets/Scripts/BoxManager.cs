@@ -52,7 +52,7 @@ public class BoxManager : MonoBehaviour
                 Random.Range(min.y, max.y),
                 Random.Range(min.z, max.z)
             );
-            Instantiate(_breakableBoxPrefab, randomPos, Quaternion.Euler(0, Random.Range(0f, 360f), 0));
+            Instantiate(_breakableBoxPrefab, randomPos, Quaternion.Euler(0, Random.Range(0f, 360f), 0), transform);
         }
     }
 

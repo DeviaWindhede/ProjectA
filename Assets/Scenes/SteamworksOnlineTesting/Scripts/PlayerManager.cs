@@ -4,16 +4,16 @@ using Unity.Netcode;
 using UnityEngine;
 using System.Linq;
 
-public class OnlinePlayerManager : Mirror.NetworkBehaviour {
+public class PlayerManager : Mirror.NetworkBehaviour {
     [SerializeField, Range(1, 4)] private int playerCount = 1;
     [SerializeField] private GameObject playerPrefab;
     [SerializeField] private GameObject _playerCameraPrefab;
     public static List<Player> players = new List<Player>();
-    private PlayerFactory playerManager;
-    private PlayerFactory PlayerManager {
+    private PlayerFactory playerFactory;
+    private PlayerFactory PlayerFactory {
         get {
-            if (playerManager != null) return playerManager;
-            return playerManager = FindObjectOfType<PlayerFactory>();
+            if (playerFactory != null) return playerFactory;
+            return playerFactory = FindObjectOfType<PlayerFactory>();
         }
     }
 
@@ -50,7 +50,7 @@ public class OnlinePlayerManager : Mirror.NetworkBehaviour {
     [ServerRpc]
     private void SpawnPlayersRpc() {
         foreach (var owner in NetworkManager.GamePlayers) {
-            PlayerManager.SpawnPlayer(owner.playerIdNumber - 1, owner);
+            PlayerFactory.SpawnPlayer(owner.playerIdNumber - 1, owner);
         }
     }
 

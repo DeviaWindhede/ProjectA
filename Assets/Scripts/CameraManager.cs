@@ -21,7 +21,7 @@ public class CameraManager : MonoBehaviour
     void Start()
     {
         var networkManager = CustomNetworkManager.singleton as CustomNetworkManager;
-        if (!networkManager.isLocalPlay) {
+        if (!networkManager.IsLocalPlay) {
             gameObject.SetActive(false);
             return;
         }

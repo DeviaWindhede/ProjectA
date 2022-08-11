@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
-
+using static HelperFunctions;
 public interface IPlayerInputCallbacks
 {
     void MoveCallback(Vector2 input);

@@ -1619,6 +1619,7 @@ MonoBehaviour:
   - {fileID: 1473751384}
   - {fileID: 530127045}
   - {fileID: 2087697548}
+  _gameSceneName: Game
 --- !u!4 &1585477090
 Transform:
   m_ObjectHideFlags: 0

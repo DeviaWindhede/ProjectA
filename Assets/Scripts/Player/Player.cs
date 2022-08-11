@@ -35,6 +35,14 @@ public class Player : NetworkBehaviour, IPlayerInputCallbacks
         get { return _followVirtualCamera.gameObject; }
     }
 
+    private CustomNetworkManager networkManager;
+    private CustomNetworkManager NetworkManager {
+        get {
+            if (networkManager != null) return networkManager;
+            return networkManager = CustomNetworkManager.singleton as CustomNetworkManager;
+        }
+    }
+
     void Awake()
     {
         _playerController = GetComponent<PlayerController>();
@@ -42,24 +50,26 @@ public class Player : NetworkBehaviour, IPlayerInputCallbacks
         SetupInputs();
     }
 
-    private InputActions actions;
-
     private void SetupInputs()
     {
         _inputs = new PlayerInputValues();
-        actions = new InputActions();
-        PlayerInputActionMapping mapping = new PlayerInputActionMapping(actions.Gameplay);
-        mapping.Subscribe(this);
 
-        //_inputManager = GameObject.FindObjectOfType<InputManager>();
-        //if (_inputManager != null) // method is always unsubscribed from in first step when the input is preassigned from playerindex
-        //{                          // therefore a null check is not needed
-        //    _inputManager.onJoin += ctx => {
-        //        if (ctx.Index == _playerIndex) {
-        //            InstantiateInputHandler(ctx);
-        //        }
-        //    };
-        //}
+        if (!NetworkManager.isLocalPlay) {
+            InputActions actions = new InputActions();
+            PlayerInputActionMapping mapping = new PlayerInputActionMapping(actions.Gameplay);
+            mapping.Subscribe(this);
+        }
+        else {
+            _inputManager = GameObject.FindObjectOfType<InputManager>();
+            if (_inputManager != null) // method is always unsubscribed from in first step when the input is preassigned from playerindex
+            {                          // therefore a null check is not needed
+                _inputManager.onJoin += ctx => {
+                    if (ctx.Index == _playerIndex) {
+                        InstantiateInputHandler(ctx);
+                    }
+                };
+            }
+        }
     }
 
     private void InstantiateInputHandler(Input input)

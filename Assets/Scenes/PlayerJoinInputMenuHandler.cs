@@ -11,6 +11,15 @@ public class PlayerJoinInputMenuHandler : MonoBehaviour
     [SerializeField] private List<TextMeshProUGUI> text;
     private InputManager _manager;
     private InputAction _p1ActionMap;
+    [SerializeField] private string _gameSceneName;
+
+    private CustomNetworkManager networkManager;
+    private CustomNetworkManager NetworkManager {
+        get {
+            if (networkManager != null) return networkManager;
+            return networkManager = CustomNetworkManager.singleton as CustomNetworkManager;
+        }
+    }
 
     void Start()
     {
@@ -35,6 +44,6 @@ public class PlayerJoinInputMenuHandler : MonoBehaviour
     {
         _p1ActionMap.performed -= _ => HandleStartGame();
         _p1ActionMap.Disable();
-        SceneManager.LoadScene("TestGameScene");
+        NetworkManager.StartGame(_gameSceneName);
     }
 }

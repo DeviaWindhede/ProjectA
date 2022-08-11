@@ -4367,7 +4367,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 783759412}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -4779,7 +4779,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!43 &921514502
 Mesh:
@@ -7114,12 +7114,12 @@ GameObject:
   - component: {fileID: 1176375826}
   - component: {fileID: 1176375825}
   m_Layer: 0
-  m_Name: PlayerManager
+  m_Name: PlayerFactory
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1176375825
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7132,12 +7132,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b5964b66a0c26704e90f20cf56d55931, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerCount: 1
   spawnPoints:
   - {fileID: 2101272595}
   - {fileID: 1793004518}
   - {fileID: 1550259436}
   - {fileID: 1218453898}
+  playerCount: 1
   playerPrefab: {fileID: 5698332844854072379, guid: 866d0ca1f5f759c4c8eb8943107e50f5,
     type: 3}
 --- !u!4 &1176375826
@@ -7147,14 +7147,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1176375824}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 783759413}
   m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1210034414
 GameObject:
@@ -7168,7 +7168,7 @@ GameObject:
   - component: {fileID: 1210034415}
   - component: {fileID: 1210034417}
   m_Layer: 0
-  m_Name: GameManager
+  m_Name: OnlinePlayerManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7188,6 +7188,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   syncMode: 0
   syncInterval: 0.1
+  playerCount: 1
   playerPrefab: {fileID: 5698332844854072379, guid: 08bd6bf9631d61343b77762efab28c12,
     type: 3}
   _playerCameraPrefab: {fileID: 1479909467845954968, guid: cefff554f679a4c4489207b695370759,
@@ -8291,7 +8292,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 1
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1369089068
 GameObject:
@@ -41678,7 +41679,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1768929162
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -20,6 +20,11 @@ public class CameraManager : MonoBehaviour
 
     void Start()
     {
+        var networkManager = CustomNetworkManager.singleton as CustomNetworkManager;
+        if (!networkManager.isLocalPlay) {
+            gameObject.SetActive(false);
+            return;
+        }
         _sizes = new List<Rect[]>()
         {
             { new Rect[] { new Rect(0, 0, 1, 1) } },
@@ -51,7 +56,6 @@ public class CameraManager : MonoBehaviour
             cam.rect = _sizes[_cameras.Count - 1][i];
         }
     }
-
     public GameObject GetCamera(int playerIndex)
     {
         return _cameras.Find(x => x.GetComponent<PlayerUIHandler>().PlayerIndex == playerIndex);

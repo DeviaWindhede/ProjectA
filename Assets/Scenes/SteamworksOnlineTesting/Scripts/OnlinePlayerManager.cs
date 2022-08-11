@@ -3,16 +3,18 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 using System.Linq;
-using Mirror;
 
-public class OnlinePlayerManager : Mirror.NetworkBehaviour
-{
+public class OnlinePlayerManager : Mirror.NetworkBehaviour {
+    [SerializeField, Range(1, 4)] private int playerCount = 1;
     [SerializeField] private GameObject playerPrefab;
     [SerializeField] private GameObject _playerCameraPrefab;
-
-    public const int PLAYER_CAMERA_BASE_LAYER = 9;
-    public int GetCullingMask(Player player) {
-        return PLAYER_CAMERA_BASE_LAYER + player.PlayerIndex;
+    public static List<Player> players = new List<Player>();
+    private PlayerFactory playerManager;
+    private PlayerFactory PlayerManager {
+        get {
+            if (playerManager != null) return playerManager;
+            return playerManager = FindObjectOfType<PlayerFactory>();
+        }
     }
 
     private List<GameObject> _cameras = new List<GameObject>();
@@ -27,9 +29,7 @@ public class OnlinePlayerManager : Mirror.NetworkBehaviour
 
     public override void OnStartServer() {
         base.OnStartServer();
-        if (isServer) {
-            SpawnPlayersRpc();
-        }
+        if (isServer) SpawnPlayersRpc();
     }
 
     public override void OnStartClient() {
@@ -39,8 +39,8 @@ public class OnlinePlayerManager : Mirror.NetworkBehaviour
             if (player) {
                 GameObject camera = Instantiate(this._playerCameraPrefab, transform);
                 Camera c = camera.GetComponent<Camera>();
-                c.cullingMask = c.cullingMask | 1 << (player.PlayerIndex + PLAYER_CAMERA_BASE_LAYER);
-                camera.layer = GetCullingMask(player);
+                c.cullingMask = c.cullingMask | 1 << (player.PlayerIndex + HelperFunctions.PLAYER_CAMERA_BASE_LAYER);
+                camera.layer = HelperFunctions.GetCullingMask(player);
                 camera.GetComponent<PlayerUIHandler>().SetPlayer(player);
                 _cameras.Add(camera);
             }
@@ -50,13 +50,7 @@ public class OnlinePlayerManager : Mirror.NetworkBehaviour
     [ServerRpc]
     private void SpawnPlayersRpc() {
         foreach (var owner in NetworkManager.GamePlayers) {
-            var go = Instantiate(playerPrefab);
-            go.transform.position = Vector3.up;
-            Player player = go.GetComponent<Player>();
-            player.GetFollowVirtualCamera.layer = GetCullingMask(player);
-            player.GetFollowVirtualCamera.SetActive(owner.hasAuthority);
-            player.ownerId = owner.netId;
-            NetworkServer.Spawn(go, owner.gameObject); // register ownership och spawna enbart för de som inte har en owner
+            PlayerManager.SpawnPlayer(owner.playerIdNumber - 1, owner);
         }
     }
 

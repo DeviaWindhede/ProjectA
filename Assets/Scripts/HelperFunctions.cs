@@ -1,6 +1,7 @@
 using UnityEngine;
 
 public class HelperFunctions {
+    public const int PLAYER_CAMERA_BASE_LAYER = 9;
     public static void log(params System.Object[] arguments)
     {
         string finalString = string.Empty;
@@ -30,5 +31,9 @@ public class HelperFunctions {
         if (cross.y < 0)
             angle = -angle;
         return angle;
+    }
+
+    public static int GetCullingMask(Player player) {
+        return PLAYER_CAMERA_BASE_LAYER + player.PlayerIndex;
     }
 }

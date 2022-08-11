@@ -6,6 +6,8 @@ using UnityEngine.SceneManagement;
 using Steamworks;
 
 public class CustomNetworkManager : NetworkManager {
+    [Header("Custom fields")]
+    public bool isLocalPlay = false;
     public const string LOBBY_SCENE_NAME = "Lobby";
     [SerializeField] private PlayerObjectController _gamePlayerPrefab;
     public List<PlayerObjectController> GamePlayers { get; } = new List<PlayerObjectController>();

@@ -125,6 +125,14 @@ public class PlayerController : NetworkBehaviour {
     private PlayerGroundedState _groundedState;
     private PlayerState _currentPlayerState;
 
+    private CustomNetworkManager networkManager;
+    private CustomNetworkManager NetworkManager {
+        get {
+            if (networkManager != null) return networkManager;
+            return networkManager = CustomNetworkManager.singleton as CustomNetworkManager;
+        }
+    }
+
     // Start is called before the first frame update
     void Awake() {
         body = GetComponent<Rigidbody>();
@@ -160,7 +168,7 @@ public class PlayerController : NetworkBehaviour {
 
 
     void FixedUpdate() {
-        if (hasAuthority) {
+        if (hasAuthority || NetworkManager.isLocalPlay) {
             PerformGroundCheckRayCast();
 
             _currentPlayerState.OnUpdate(this, _data);

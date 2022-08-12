@@ -29,7 +29,7 @@ public class LobbyController : Singleton<LobbyController> {
     }
 
     public void UpdateLobbyName() {
-        currentLobbyId = NetworkManager.GetComponent<SteamLobby>().currentLobbyId;
+        currentLobbyId = SteamLobby.Instance.currentLobbyId;
         lobbyNameText.text = SteamMatchmaking.GetLobbyData(new CSteamID(currentLobbyId), "name");
     }
 
@@ -100,5 +100,10 @@ public class LobbyController : Singleton<LobbyController> {
 
     public void StartGame(string sceneName) {
         localPlayerController.CanStartGame(sceneName);
+    }
+
+    public void CloseHost() {
+        NetworkServer.DisconnectAll();
+        NetworkManager.StopHost();
     }
 }

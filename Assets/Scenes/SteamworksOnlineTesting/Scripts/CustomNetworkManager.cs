@@ -13,25 +13,21 @@ public class CustomNetworkManager : NetworkManager {
         get { return _isLocalPlay; }
         set {
             _isLocalPlay = value;
-            var steamworks = GetComponent<FizzySteamworks>();
-            var steamManager = GetComponent<SteamManager>();
-            var steamLobby = GetComponent<SteamLobby>();
 
+            // TODO: Verify if this is necessary
             var isOnlinePlay = !value;
-            if (steamManager) steamManager.enabled = isOnlinePlay;
-            if (steamLobby) steamLobby.enabled = isOnlinePlay;
-            if (steamworks) steamworks.enabled = isOnlinePlay;
-
-            transport = isOnlinePlay ? steamworks : null;
+            SteamDataManager.Instance.SteamManager.enabled = isOnlinePlay;
+            SteamLobby.Instance.enabled = isOnlinePlay;
+            SteamDataManager.Instance.FizzySteamworks.enabled = isOnlinePlay;
         }
     }
     public const string LOBBY_SCENE_NAME = "Lobby";
     [SerializeField] private PlayerObjectController _gamePlayerPrefab;
     public List<PlayerObjectController> GamePlayers { get; } = new List<PlayerObjectController>();
 
-    public override void Awake() {
-        base.Awake();
-        //IsLocalPlay = _isLocalPlay;
+    public override void Start() {
+        base.Start();
+        Transport.activeTransport = SteamDataManager.Instance.FizzySteamworks;
     }
 
     public override void OnServerAddPlayer(NetworkConnectionToClient conn) {
@@ -53,7 +49,8 @@ public class CustomNetworkManager : NetworkManager {
     }
 
     public override void OnApplicationQuit() {
-        base.OnApplicationQuit();
         NetworkServer.DisconnectAll();
+        StopHost();
+        base.OnApplicationQuit();
     }
 }

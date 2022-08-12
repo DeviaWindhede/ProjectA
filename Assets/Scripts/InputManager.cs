@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Linq;
+using UnityEngine.SceneManagement;
 
 public class Input
 {
@@ -25,7 +26,7 @@ public class Input
 }
 
 [RequireComponent(typeof(PlayerInputManager))]
-public class InputManager : MonoBehaviour
+public class InputManager : Singleton<MonoBehaviour>
 {
     public const string GAMEPLAY_MAPPING_NAME = "Gameplay";
     public event System.Action<Input> onJoin;
@@ -35,6 +36,7 @@ public class InputManager : MonoBehaviour
 
     public int InputCount { get { return _inputs.Count; } }
 
+    private static GameObject gameObjectInstance;
     private void Awake()
     {
         _inputs = new List<Input>();
@@ -43,7 +45,11 @@ public class InputManager : MonoBehaviour
         _manager.onPlayerJoined += ctx => this.OnPlayerJoined(ctx);
         _manager.onPlayerLeft += ctx => this.OnPlayerLeft(ctx);
 
-        Object.DontDestroyOnLoad(this);
+        if (gameObjectInstance != null)
+            Destroy(gameObject);
+
+        gameObjectInstance = gameObject;
+        DontDestroyOnLoad(this);
     }
 
     private void OnPlayerJoined(PlayerInput input)

@@ -43,15 +43,8 @@ public class SceneSwapButton : MonoBehaviour {
         MenuManager.Instance.StartTransitionAnimation();
         yield return new WaitForSeconds(MenuManager.Instance.GetTransitionLength);
 
-        bool hasLoadedScene = false;
-        SceneManager.sceneLoaded += (scene, y) => hasLoadedScene = scene.isLoaded;
-
+        SceneManager.sceneLoaded += OnSceneLoaded;
         SteamLobby.Instance.HostLobby();
-        yield return new WaitWhile(() => hasLoadedScene == true);
-        yield return new WaitForSeconds(0.25f);
-
-        MenuManager.Instance.StopTransitionAnimation();
-        SceneManager.sceneLoaded -= (scene, y) => hasLoadedScene = scene.isLoaded;
     }
     private IEnumerator CloseLobbyCoroutine() {
         if (SteamLobby.Instance == null)
@@ -61,8 +54,15 @@ public class SceneSwapButton : MonoBehaviour {
         MenuManager.Instance.StartTransitionAnimation();
         yield return new WaitForSeconds(MenuManager.Instance.GetTransitionLength);
 
+        SceneManager.sceneLoaded += OnSceneLoaded;
+
         SteamLobby.Instance.CloseLobby();
         ChangeToLocalPlay(true);
-        MenuManager.Instance.StopTransitionAnimation();
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode _) {
+        if (scene.isLoaded) {
+            MenuManager.Instance.StopTransitionAnimation();
+        }
     }
 }

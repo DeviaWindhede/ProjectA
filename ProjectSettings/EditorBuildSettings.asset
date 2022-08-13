@@ -17,9 +17,12 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/InitialMenuScene.unity
     guid: 15edcda400aa5c04d967eb947971793c
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/TestGameScene.unity
     guid: 949f50164b0c76341836f9599ede4e3e
+  - enabled: 1
+    path: Assets/Scenes/SteamworksOnlineTesting/MultiplayerMenu.unity
+    guid: 782b0e9bb89f01f4187c5ec070f11541
   - enabled: 1
     path: Assets/Scenes/SteamworksOnlineTesting/Lobby.unity
     guid: b2678966c906ec84181f4c460bb1a750

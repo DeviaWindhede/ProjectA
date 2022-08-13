@@ -39,7 +39,6 @@ public class SceneSwapButton : MonoBehaviour {
             yield return null;
 
         DisableButton();
-        ChangeToLocalPlay(false);
         MenuManager.Instance.StartTransitionAnimation();
         yield return new WaitForSeconds(MenuManager.Instance.GetTransitionLength);
 

@@ -19,16 +19,16 @@ public class PlayerFactory : MonoBehaviour {
 
     void Start() {
         players = new List<Player>();
-        if (NetworkManager.IsLocalPlay) {
+        if (!NetworkClient.active) {
             var inputManager = FindObjectOfType<InputManager>();
             if (inputManager != null && inputManager.InputCount > 0) playerCount = inputManager.InputCount;
 
-            if (NetworkManager.IsLocalPlay) SpawnPlayersLocally();
+            if (!NetworkClient.active) SpawnPlayersLocally();
         }
     }
 
     private void SpawnPlayersLocally() {
-        if (NetworkManager.IsLocalPlay) {
+        if (!NetworkClient.active) {
             var inputManager = FindObjectOfType<InputManager>();
             if (inputManager != null && inputManager.InputCount > 0) playerCount = inputManager.InputCount;
 
@@ -53,7 +53,7 @@ public class PlayerFactory : MonoBehaviour {
         go.transform.position = Vector3.up;
         Player player = go.GetComponent<Player>();
 
-        if (NetworkManager.IsLocalPlay) {
+        if (!NetworkClient.active) {
             player.SetPlayerIndex(playerIndex);
             players.Add(player);
         }

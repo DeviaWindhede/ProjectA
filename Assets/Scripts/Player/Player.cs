@@ -54,7 +54,7 @@ public class Player : NetworkBehaviour, IPlayerInputCallbacks
     {
         _inputs = new PlayerInputValues();
 
-        if (!NetworkManager.IsLocalPlay) {
+        if (NetworkClient.active) {
             InputActions actions = new InputActions();
             PlayerInputActionMapping mapping = new PlayerInputActionMapping(actions.Gameplay);
             mapping.Subscribe(this);

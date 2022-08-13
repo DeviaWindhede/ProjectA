@@ -168,7 +168,7 @@ public class PlayerController : NetworkBehaviour {
 
 
     void FixedUpdate() {
-        if (hasAuthority || NetworkManager.IsLocalPlay) {
+        if (hasAuthority || !NetworkClient.active) {
             PerformGroundCheckRayCast();
 
             _currentPlayerState.OnUpdate(this, _data);

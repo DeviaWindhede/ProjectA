@@ -36,7 +36,7 @@ public class BoxFactory : MonoBehaviour {
     }
 
     private void Start() {
-        if (!NetworkManager.IsLocalPlay) return;
+        if (NetworkClient.active) return;
 
         timer = GetRandomSpawnTimer();
         SpawnBoxesLocally();
@@ -51,7 +51,7 @@ public class BoxFactory : MonoBehaviour {
 
     // Update is called once per frame
     private void FixedUpdate() {
-        if (!NetworkManager.IsLocalPlay) return;
+        if (NetworkClient.active) return;
 
         timer += Time.fixedDeltaTime;
         if (timer.Expired) {

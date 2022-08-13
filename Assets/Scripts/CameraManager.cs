@@ -21,7 +21,7 @@ public class CameraManager : MonoBehaviour
     void Start()
     {
         var networkManager = CustomNetworkManager.singleton as CustomNetworkManager;
-        if (!networkManager.IsLocalPlay) {
+        if (Mirror.NetworkClient.active) {
             gameObject.SetActive(false);
             return;
         }

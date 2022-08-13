@@ -8,19 +8,6 @@ using Mirror.FizzySteam;
 
 public class CustomNetworkManager : NetworkManager {
     [Header("Custom fields")]
-    [SerializeField] private bool _isLocalPlay = false;
-    public bool IsLocalPlay {
-        get { return _isLocalPlay; }
-        set {
-            _isLocalPlay = value;
-
-            // TODO: Verify if this is necessary
-            var isOnlinePlay = !value;
-            SteamDataManager.Instance.SteamManager.enabled = isOnlinePlay;
-            SteamLobby.Instance.enabled = isOnlinePlay;
-            SteamDataManager.Instance.FizzySteamworks.enabled = isOnlinePlay;
-        }
-    }
     public const string LOBBY_SCENE_NAME = "Lobby";
     [SerializeField] private PlayerObjectController _gamePlayerPrefab;
     public List<PlayerObjectController> GamePlayers { get; } = new List<PlayerObjectController>();

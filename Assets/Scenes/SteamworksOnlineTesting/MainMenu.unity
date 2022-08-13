@@ -150,7 +150,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 334179012}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d78f5b726df50474abae34c578a5c580, type: 3}
   m_Name: 
@@ -163,7 +163,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 334179012}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ef4bffeda13d7a748973ff9204401c07, type: 3}
   m_Name: 
@@ -175,7 +175,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 334179012}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ea368fb6f27ec2f40a40e20977992b9c, type: 3}
   m_Name: 
@@ -376,18 +376,6 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 793244173}
-        m_TargetAssemblyTypeName: SceneSwapButton, Assembly-CSharp
-        m_MethodName: ChangeToLocalPlay
-        m_Mode: 6
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 1
-        m_CallState: 2
       - m_Target: {fileID: 793244173}
         m_TargetAssemblyTypeName: SceneSwapButton, Assembly-CSharp
         m_MethodName: ChangeScene
@@ -876,7 +864,6 @@ MonoBehaviour:
   - {fileID: 5698332844854072379, guid: 08bd6bf9631d61343b77762efab28c12, type: 3}
   - {fileID: 2992007400796857061, guid: 2333e15e95e13604c8d6764a34142ca4, type: 3}
   - {fileID: 6722196719687307705, guid: c975a961dcd9c4843b910432d12b6ad0, type: 3}
-  _isLocalPlay: 1
   _gamePlayerPrefab: {fileID: 6816423856846216278, guid: 831b5d83ea42c804aa036b3ef72fdbef,
     type: 3}
 --- !u!4 &1389682294

@@ -48,7 +48,7 @@ public class BreakableBox : NetworkBehaviour {
 
     // Gives pickup to player instead of otherway around to prevent edge-case
     private void FixedUpdate() {
-        if (_useGravity && (isServer || (NetworkManager.singleton as CustomNetworkManager).IsLocalPlay)) {
+        if (_useGravity && (isServer || !NetworkClient.active)) {
             _body.AddForce(Vector3.down * _gravityScale * Time.fixedDeltaTime);
         }
     }

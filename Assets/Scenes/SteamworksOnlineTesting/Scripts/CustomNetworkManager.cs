@@ -8,12 +8,23 @@ using Mirror.FizzySteam;
 
 public class CustomNetworkManager : NetworkManager {
     [Header("Custom fields")]
+    [SerializeField] private bool _isLocalPlay;
+    public bool IsLocalPlay { // used to circumvent steam removing local play with controllers
+        get { return _isLocalPlay; } // TODO: remove this when steam app is available
+        set {
+            _isLocalPlay = value;
+            SteamDataManager.Instance.FizzySteamworks.enabled = !value;
+            SteamDataManager.Instance.SteamManager.enabled = !value;
+            SteamLobby.Instance.enabled = !value;
+        }
+    }
     public const string LOBBY_SCENE_NAME = "Lobby";
     [SerializeField] private PlayerObjectController _gamePlayerPrefab;
     public List<PlayerObjectController> GamePlayers { get; } = new List<PlayerObjectController>();
 
     public override void Start() {
         base.Start();
+        IsLocalPlay = _isLocalPlay;
         Transport.activeTransport = SteamDataManager.Instance.FizzySteamworks;
     }
 

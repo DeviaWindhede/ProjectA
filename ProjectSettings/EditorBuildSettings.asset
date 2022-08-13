@@ -8,7 +8,7 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/OnlineTesting/OnlineTestingScene.unity
     guid: 41e2662ed4917424488260a5e7d036df
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/SteamworksOnlineTesting/Start.unity
     guid: 865d0f8d78928104a8fae7c26707e65b
   - enabled: 1

@@ -26,6 +26,10 @@ public class SceneSwapButton : MonoBehaviour {
         StartCoroutine(HostLobbyCoroutine());
     }
 
+    public void ChangeToLocalPlay(bool isLocalPlay) {
+        NetworkManager.IsLocalPlay = isLocalPlay;
+    }
+
     private void DisableButton() {
         GetComponent<Button>().interactable = false;
     }
@@ -35,6 +39,7 @@ public class SceneSwapButton : MonoBehaviour {
             yield return null;
 
         DisableButton();
+        ChangeToLocalPlay(false);
         MenuManager.Instance.StartTransitionAnimation();
         yield return new WaitForSeconds(MenuManager.Instance.GetTransitionLength);
 
@@ -52,6 +57,9 @@ public class SceneSwapButton : MonoBehaviour {
         SceneManager.sceneLoaded += OnSceneLoaded;
 
         SteamLobby.Instance.CloseLobby();
+        yield return new WaitForFixedUpdate();
+
+        ChangeToLocalPlay(true);
     }
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode _) {

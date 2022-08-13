@@ -50,7 +50,7 @@ public class PlayerManager : Mirror.NetworkBehaviour {
     [ServerRpc]
     private void SpawnPlayersRpc() {
         foreach (var owner in NetworkManager.GamePlayers) {
-            PlayerFactory.SpawnPlayer(owner.playerIdNumber - 1, owner);
+            Mirror.NetworkServer.Spawn(PlayerFactory.SpawnPlayer(owner.playerIdNumber - 1, owner), owner.gameObject);
         }
     }
 

@@ -41,7 +41,7 @@ public class PlayerFactory : MonoBehaviour {
         }
     }
 
-    public void SpawnPlayer(int playerIndex, PlayerObjectController owner = null) {
+    public GameObject SpawnPlayer(int playerIndex, PlayerObjectController owner = null) {
         Vector3 spawnPosition = Vector3.zero;
         Quaternion spawnRotation = Quaternion.identity;
         if (spawnPoints.Length >= playerIndex && spawnPoints[playerIndex]) {
@@ -61,10 +61,10 @@ public class PlayerFactory : MonoBehaviour {
             player.GetFollowVirtualCamera.layer = HelperFunctions.GetCullingMask(player);
             player.GetFollowVirtualCamera.SetActive(owner.hasAuthority);
             player.ownerId = owner.netId;
-            NetworkServer.Spawn(go, owner.gameObject); // register ownership och spawna enbart för de som inte har en owner
         }
         else {
             Debug.LogWarning("SpawnPlayer was called without an owner during online play", this);
         }
+        return go;
     }
 }

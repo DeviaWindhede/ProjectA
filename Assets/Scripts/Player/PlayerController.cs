@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Linq;
+using Mirror;
 using static HelperFunctions;
 
 [RequireComponent(typeof(Rigidbody))]
-public class PlayerController : MonoBehaviour {
+public class PlayerController : NetworkBehaviour {
     [SerializeField] private Transform _mesh;
     public bool useGravity = true;
 
@@ -124,6 +125,14 @@ public class PlayerController : MonoBehaviour {
     private PlayerGroundedState _groundedState;
     private PlayerState _currentPlayerState;
 
+    private CustomNetworkManager networkManager;
+    private CustomNetworkManager NetworkManager {
+        get {
+            if (networkManager != null) return networkManager;
+            return networkManager = CustomNetworkManager.singleton as CustomNetworkManager;
+        }
+    }
+
     // Start is called before the first frame update
     void Awake() {
         body = GetComponent<Rigidbody>();
@@ -147,23 +156,31 @@ public class PlayerController : MonoBehaviour {
         _currentPlayerState = _airBorneState;
     }
 
-    void Start() {
-        int playerIndex = GetComponent<Player>().PlayerIndex;
-        _uiHandler = GameObject
-            .FindObjectOfType<CameraManager>()
-            .GetCamera(playerIndex)
-            .GetComponent<PlayerUIHandler>();
+    public override void OnStartClient() {
+        base.OnStartClient();
+        if (hasAuthority) _uiHandler = FindObjectOfType<PlayerUIHandler>(); // There is only one UIHandler present in the online environment
     }
 
+    void Start() {
+        int playerIndex = GetComponent<Player>().PlayerIndex;
+        if (NetworkClient.active) return;
+
+        var cameraManager = FindObjectOfType<CameraManager>();
+        _uiHandler = cameraManager.GetCamera(playerIndex).GetComponent<PlayerUIHandler>();
+    }
+
+
     void FixedUpdate() {
-        PerformGroundCheckRayCast();
+        if (hasAuthority || !NetworkClient.active) {
+            PerformGroundCheckRayCast();
 
-        _currentPlayerState.OnUpdate(this, _data);
+            _currentPlayerState.OnUpdate(this, _data);
 
-        HandleChargeUI(); // TODO move this to Player?
+            HandleChargeUI(); // TODO move this to Player?
 
-        _mesh.position = finalRotation * _meshPivotPoint + transform.position;
-        _mesh.rotation = finalRotation;
+            _mesh.position = finalRotation * _meshPivotPoint + transform.position;
+            _mesh.rotation = finalRotation;
+        }
     }
 
     private void PerformGroundCheckRayCast() {

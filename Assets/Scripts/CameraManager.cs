@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CameraManager : MonoBehaviour
+public class CameraManager : Singleton<CameraManager>
 {
     public const int PLAYER_CAMERA_BASE_LAYER = 9;
 
@@ -20,6 +20,10 @@ public class CameraManager : MonoBehaviour
 
     void Start()
     {
+        if (Mirror.NetworkClient.active) {
+            gameObject.SetActive(false);
+            return;
+        }
         _sizes = new List<Rect[]>()
         {
             { new Rect[] { new Rect(0, 0, 1, 1) } },
@@ -51,7 +55,6 @@ public class CameraManager : MonoBehaviour
             cam.rect = _sizes[_cameras.Count - 1][i];
         }
     }
-
     public GameObject GetCamera(int playerIndex)
     {
         return _cameras.Find(x => x.GetComponent<PlayerUIHandler>().PlayerIndex == playerIndex);

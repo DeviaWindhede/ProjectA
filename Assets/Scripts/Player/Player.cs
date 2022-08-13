@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Linq;
+using Mirror;
 using static HelperFunctions;
 
 [RequireComponent(typeof(PlayerController), typeof(PlayerData))]
-public class Player : MonoBehaviour, IPlayerInputCallbacks
+public class Player : NetworkBehaviour, IPlayerInputCallbacks
 {
     [SerializeField]
     private int _playerIndex = 0;
@@ -22,6 +23,7 @@ public class Player : MonoBehaviour, IPlayerInputCallbacks
     private PlayerInputValues _inputs;
     private InputManager _inputManager;
     private PlayerData _data;
+    [SyncVar] [HideInInspector] public uint ownerId;
 
     public int PlayerIndex
     {
@@ -31,6 +33,14 @@ public class Player : MonoBehaviour, IPlayerInputCallbacks
     public GameObject GetFollowVirtualCamera
     {
         get { return _followVirtualCamera.gameObject; }
+    }
+
+    private CustomNetworkManager networkManager;
+    private CustomNetworkManager NetworkManager {
+        get {
+            if (networkManager != null) return networkManager;
+            return networkManager = CustomNetworkManager.singleton as CustomNetworkManager;
+        }
     }
 
     void Awake()
@@ -43,15 +53,22 @@ public class Player : MonoBehaviour, IPlayerInputCallbacks
     private void SetupInputs()
     {
         _inputs = new PlayerInputValues();
-        _inputManager = GameObject.FindObjectOfType<InputManager>();
-        if (_inputManager != null) // method is always unsubscribed from in first step when the input is preassigned from playerindex
-        {                          // therefore a null check is not needed
-            _inputManager.onJoin += ctx =>
-            {
-                if (ctx.Index == _playerIndex) {
-                    InstantiateInputHandler(ctx);
-                }
-            };
+
+        if (NetworkClient.active) {
+            InputActions actions = new InputActions();
+            PlayerInputActionMapping mapping = new PlayerInputActionMapping(actions.Gameplay);
+            mapping.Subscribe(this);
+        }
+        else {
+            _inputManager = GameObject.FindObjectOfType<InputManager>();
+            if (_inputManager != null) // method is always unsubscribed from in first step when the input is preassigned from playerindex
+            {                          // therefore a null check is not needed
+                _inputManager.onJoin += ctx => {
+                    if (ctx.Index == _playerIndex) {
+                        InstantiateInputHandler(ctx);
+                    }
+                };
+            }
         }
     }
 

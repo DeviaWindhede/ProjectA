@@ -4,8 +4,10 @@ using UnityEngine;
 using Mirror;
 using Steamworks;
 using TMPro;
+using Mirror.FizzySteam;
 using static HelperFunctions;
 
+[RequireComponent(typeof(FizzySteamworks), typeof(SteamMatchmaking))]
 public class SteamLobby : Singleton<SteamLobby> {
     protected Callback<LobbyCreated_t> LobbyCreated;
     protected Callback<GameLobbyJoinRequested_t> JoinRequest;
@@ -14,6 +16,12 @@ public class SteamLobby : Singleton<SteamLobby> {
     public ulong currentLobbyId;
     private const string HOST_ADDRESS_KEY = "HostAddress";
     private CustomNetworkManager networkManager;
+    private CustomNetworkManager NetworkManager {
+        get {
+            if (networkManager != null) return networkManager;
+            return networkManager = CustomNetworkManager.singleton as CustomNetworkManager;
+        }
+    }
 
     //public GameObject hostButton;
     //public TextMeshProUGUI lobbyNameText;
@@ -21,8 +29,6 @@ public class SteamLobby : Singleton<SteamLobby> {
     private void Start() {
         if (!SteamManager.Initialized)
             return;
-
-        networkManager = GetComponent<CustomNetworkManager>();
 
         LobbyCreated = Callback<LobbyCreated_t>.Create(OnLobbyCreated);
         JoinRequest = Callback<GameLobbyJoinRequested_t>.Create(OnJoinRequest);
@@ -32,8 +38,18 @@ public class SteamLobby : Singleton<SteamLobby> {
     public void HostLobby() {
         SteamMatchmaking.CreateLobby(
             ELobbyType.k_ELobbyTypeFriendsOnly,
-            networkManager.maxConnections
+            NetworkManager.maxConnections
         );
+    }
+
+    public void CloseLobby() {
+        var isHost = NetworkManager.GamePlayers.Find(p => p.isLocalPlayer && p.isServer);
+        if (isHost) NetworkManager.StopHost();
+        else LeaveLobby();
+    }
+
+    public void LeaveLobby() {
+        SteamMatchmaking.LeaveLobby(new CSteamID(currentLobbyId));
     }
 
     private void OnLobbyCreated(LobbyCreated_t callback) {
@@ -42,7 +58,7 @@ public class SteamLobby : Singleton<SteamLobby> {
 
         log("Lobby successfully created!");
 
-        networkManager.StartHost();
+        NetworkManager.StartHost();
 
         CSteamID lobbyId = new CSteamID(callback.m_ulSteamIDLobby);
         SteamMatchmaking.SetLobbyData(
@@ -71,11 +87,11 @@ public class SteamLobby : Singleton<SteamLobby> {
         // Clients
         if (NetworkServer.active) return;
 
-        networkManager.networkAddress = SteamMatchmaking.GetLobbyData(
+        NetworkManager.networkAddress = SteamMatchmaking.GetLobbyData(
             lobbyId,
             HOST_ADDRESS_KEY
         );
 
-        networkManager.StartClient();
+        NetworkManager.StartClient();
     }
 }

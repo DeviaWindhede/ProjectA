@@ -31,6 +31,8 @@ public class InputManager : Singleton<MonoBehaviour>
     public const string GAMEPLAY_MAPPING_NAME = "Gameplay";
     public event System.Action<Input> onJoin;
 
+    [SerializeField] private string mainMenuSceneName = "MainMenu";
+    [SerializeField] private string lobbySceneName = "Lobby"; // Used to prevent lobby join via invite edge case
     private List<Input> _inputs;
     private PlayerInputManager _manager;
 
@@ -50,6 +52,16 @@ public class InputManager : Singleton<MonoBehaviour>
 
         gameObjectInstance = gameObject;
         DontDestroyOnLoad(this);
+
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode _) {
+        bool isInvalidScene = scene.name == mainMenuSceneName || scene.name == lobbySceneName;
+        if (isInvalidScene && gameObject != null) {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+            Destroy(gameObject);
+        }
     }
 
     private void OnPlayerJoined(PlayerInput input)

@@ -874,6 +874,8 @@ MonoBehaviour:
   spawnPrefabs:
   - {fileID: 6815951686089565659, guid: 831b5d83ea42c804aa036b3ef72fdbef, type: 3}
   - {fileID: 5698332844854072379, guid: 08bd6bf9631d61343b77762efab28c12, type: 3}
+  - {fileID: 2992007400796857061, guid: 2333e15e95e13604c8d6764a34142ca4, type: 3}
+  - {fileID: 6722196719687307705, guid: c975a961dcd9c4843b910432d12b6ad0, type: 3}
   _isLocalPlay: 1
   _gamePlayerPrefab: {fileID: 6816423856846216278, guid: 831b5d83ea42c804aa036b3ef72fdbef,
     type: 3}

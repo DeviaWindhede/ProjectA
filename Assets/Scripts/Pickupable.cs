@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Mirror;
 using static ResourceManager;
 
 [System.Serializable]
@@ -18,7 +19,7 @@ public struct PlayerStatPickupInfo
 
 // TODO: Implement custom editor
 [RequireComponent(typeof(Rigidbody))]
-public class Pickupable : MonoBehaviour
+public class Pickupable : NetworkBehaviour
 {
     // TODO: Implement powerups and ability pickups
     [SerializeField]
@@ -117,9 +118,15 @@ public class Pickupable : MonoBehaviour
                 )
             },
         };
-
         _body = GetComponent<Rigidbody>();
+
+        if (NetworkClient.active) return;
+
         if (_statType != StatType.None) SetStatType(_statType);
+    }
+    public override void OnStartClient() {
+        base.OnStartClient();
+        SetStatType(_statType);
     }
 
     public void SetStatType(StatType statType)
@@ -163,9 +170,15 @@ public class Pickupable : MonoBehaviour
                     closestPlayer = hits[i].collider.GetComponent<Player>();
                 }
             }
-            closestPlayer.AddStats(_stats);
-            Destroy(gameObject); // TODO: Animation
+            closestPlayer.AddStats(_stats);  // TODO: Animation
+            if (NetworkClient.active && isServer) DestroyObject();
+            else if (!NetworkClient.active) Destroy(gameObject);
         }
+    }
+
+    [Unity.Netcode.ServerRpc]
+    private void DestroyObject() {
+        NetworkServer.Destroy(gameObject);
     }
 
     private void OnCollisionEnter(Collision other)

@@ -57,6 +57,7 @@ public class SceneSwapButton : MonoBehaviour {
     private void OnSceneLoaded(Scene scene, LoadSceneMode _) {
         if (scene.isLoaded) {
             MenuManager.Instance.StopTransitionAnimation();
+            SceneManager.sceneLoaded -= OnSceneLoaded;
         }
     }
 }

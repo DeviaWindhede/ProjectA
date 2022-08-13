@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CameraManager : MonoBehaviour
+public class CameraManager : Singleton<CameraManager>
 {
     public const int PLAYER_CAMERA_BASE_LAYER = 9;
 
@@ -20,7 +20,6 @@ public class CameraManager : MonoBehaviour
 
     void Start()
     {
-        var networkManager = CustomNetworkManager.singleton as CustomNetworkManager;
         if (Mirror.NetworkClient.active) {
             gameObject.SetActive(false);
             return;

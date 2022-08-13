@@ -156,14 +156,17 @@ public class PlayerController : NetworkBehaviour {
         _currentPlayerState = _airBorneState;
     }
 
+    public override void OnStartClient() {
+        base.OnStartClient();
+        if (hasAuthority) _uiHandler = FindObjectOfType<PlayerUIHandler>(); // There is only one UIHandler present in the online environment
+    }
+
     void Start() {
         int playerIndex = GetComponent<Player>().PlayerIndex;
-        //var playerManager = FindObjectOfType<OnlinePlayerManager>();
-        //if (playerManager && hasAuthority) {
-        //    _uiHandler = playerManager
-        //        .GetCamera(playerIndex)
-        //        .GetComponent<PlayerUIHandler>();
-        //}
+        if (NetworkClient.active) return;
+
+        var cameraManager = FindObjectOfType<CameraManager>();
+        _uiHandler = cameraManager.GetCamera(playerIndex).GetComponent<PlayerUIHandler>();
     }
 
 

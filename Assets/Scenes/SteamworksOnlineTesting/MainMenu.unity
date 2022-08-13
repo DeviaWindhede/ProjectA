@@ -842,16 +842,9 @@ MonoBehaviour:
       m_Calls: []
   m_text: 'TODO
 
-    1. Test online functionality via build and laptop
+    * Refactor network solutions (can wait)
 
-
-
-    2.
-    Refactor network solutions (can wait)
-
-
-
-    3. UI Updates
+    * UI Updates
 
 
 

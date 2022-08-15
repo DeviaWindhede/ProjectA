@@ -37,27 +37,27 @@ public class BoxFactory : MonoBehaviour {
     }
 
     private void Start() {
-        if (NetworkClient.active) return;
+        if (NetworkClient.active || !NetworkManager.IsLocalPlay) return;
 
-        timer = GetRandomSpawnTimer();
+        timer = new Timer(GetRandomSpawnTime());
         SpawnBoxesLocally();
     }
 
     private void SpawnBoxesLocally() {
         float boxCount = GetRandomBoxSpawnCount();
         for (int i = 0; i < boxCount; i++) {
-            SpawnBox(GetRandomSpawnPosition(), GetRandomRotation());
+            SpawnBox(GetRandomSpawnPosition(), HelperFunctions.GetRandomRotation());
         }
     }
 
     // Update is called once per frame
     private void FixedUpdate() {
-        if (NetworkClient.active) return;
+        if (NetworkClient.active || !NetworkManager.IsLocalPlay) return;
 
         timer += Time.fixedDeltaTime;
         if (timer.Expired) {
             SpawnBoxesLocally();
-            timer = GetRandomSpawnTimer();
+            timer = new Timer(GetRandomSpawnTime());
         }
     }
 
@@ -65,9 +65,8 @@ public class BoxFactory : MonoBehaviour {
         Gizmos.color = Color.red;
         Gizmos.DrawWireCube(_spawnCenter, new Vector3(_spawnArea.x, 0, _spawnArea.y));
     }
-    public Timer GetRandomSpawnTimer() {
-        float randomTime = Random.Range(_minTime, _maxTime + 1f);
-        return new Timer(randomTime);
+    public float GetRandomSpawnTime() {
+        return Random.Range(_minTime, _maxTime + 1f);
     }
 
     public float GetRandomBoxSpawnCount() {
@@ -84,10 +83,6 @@ public class BoxFactory : MonoBehaviour {
             Random.Range(min.y, max.y),
             Random.Range(min.z, max.z)
         );
-    }
-
-    public float GetRandomRotation() {
-        return Random.Range(0f, 360f);
     }
 
     public GameObject SpawnBox(Vector3 position, float rotation) {

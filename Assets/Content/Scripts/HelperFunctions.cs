@@ -36,4 +36,11 @@ public class HelperFunctions {
     public static int GetCullingMask(Player player) {
         return PLAYER_CAMERA_BASE_LAYER + player.PlayerIndex;
     }
+
+    /// <summary>
+    /// Returns a value between 0-360f
+    /// </summary>
+    public static float GetRandomRotation() {
+        return Random.Range(0f, 360f);
+    }
 }

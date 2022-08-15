@@ -20,7 +20,7 @@ public class BoxManager : Mirror.NetworkBehaviour {
         base.OnStartServer();
         if (isServer) {
             SpawnBoxesRpc();
-            timer = BoxFactory.GetRandomSpawnTimer();
+            timer = new Timer(BoxFactory.GetRandomSpawnTime()); // TODO: Improve factory and online manager flow
         }
     }
 
@@ -30,7 +30,7 @@ public class BoxManager : Mirror.NetworkBehaviour {
         timer += Time.fixedDeltaTime;
         if (timer.Expired) {
             SpawnBoxesRpc();
-            timer = BoxFactory.GetRandomSpawnTimer();
+            timer = new Timer(BoxFactory.GetRandomSpawnTime());
         }
     }
 
@@ -40,7 +40,7 @@ public class BoxManager : Mirror.NetworkBehaviour {
         for (int i = 0; i < boxCount; i++) {
             GameObject box = BoxFactory.SpawnBox(
                 BoxFactory.GetRandomSpawnPosition(),
-                BoxFactory.GetRandomRotation()
+                HelperFunctions.GetRandomRotation()
             );
             NetworkServer.Spawn(box);
         }

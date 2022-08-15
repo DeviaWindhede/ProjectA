@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Mirror;
+using static ResourceManager;
 
 public class BoxFactory : MonoBehaviour {
     [SerializeField]

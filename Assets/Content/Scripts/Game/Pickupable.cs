@@ -41,83 +41,9 @@ public class Pickupable : NetworkBehaviour
     private bool _useGravity = true;
     private Material _material;
     private PlayerStats _stats;
-    private Dictionary<StatType, PlayerStatPickupInfo> _pickupInfo;
 
     private void Awake()
     {
-        _pickupInfo = new Dictionary<StatType, PlayerStatPickupInfo>()
-        {
-            {
-                StatType.All,
-                new PlayerStatPickupInfo(
-                    new PlayerStats(1, 1, 1, 1, 1, 1, 1, 1, 1),
-                    ResourceManager.GetStatTexture(StatType.All)
-                )
-            },
-            {
-                StatType.Boost,
-                new PlayerStatPickupInfo(
-                    new PlayerStats(1, 0, 0, 0, 0, 0, 0, 0, 0),
-                    ResourceManager.GetStatTexture(StatType.Boost)
-                )
-            },
-            {
-                StatType.Charge,
-                new PlayerStatPickupInfo(
-                    new PlayerStats(0, 1, 0, 0, 0, 0, 0, 0, 0),
-                    ResourceManager.GetStatTexture(StatType.Charge)
-                )
-            },
-            {
-                StatType.Defence,
-                new PlayerStatPickupInfo(
-                    new PlayerStats(0, 0, 1, 0, 0, 0, 0, 0, 0),
-                    ResourceManager.GetStatTexture(StatType.Defence)
-                )
-            },
-            {
-                StatType.Glide,
-                new PlayerStatPickupInfo(
-                    new PlayerStats(0, 0, 0, 1, 0, 0, 0, 0, 0),
-                    ResourceManager.GetStatTexture(StatType.Glide)
-                )
-            },
-            {
-                StatType.Health,
-                new PlayerStatPickupInfo(
-                    new PlayerStats(0, 0, 0, 0, 1, 0, 0, 0, 0),
-                    ResourceManager.GetStatTexture(StatType.Health)
-                )
-            },
-            {
-                StatType.Offence,
-                new PlayerStatPickupInfo(
-                    new PlayerStats(0, 0, 0, 0, 0, 1, 0, 0, 0),
-                    ResourceManager.GetStatTexture(StatType.Offence)
-                )
-            },
-            {
-                StatType.TopSpeed,
-                new PlayerStatPickupInfo(
-                    new PlayerStats(0, 0, 0, 0, 0, 0, 1, 0, 0),
-                    ResourceManager.GetStatTexture(StatType.TopSpeed)
-                )
-            },
-            {
-                StatType.Turn,
-                new PlayerStatPickupInfo(
-                    new PlayerStats(0, 0, 0, 0, 0, 0, 0, 1, 0),
-                    ResourceManager.GetStatTexture(StatType.Turn)
-                )
-            },
-            {
-                StatType.Weight,
-                new PlayerStatPickupInfo(
-                    new PlayerStats(0, 0, 0, 0, 0, 0, 0, 0, 1),
-                    ResourceManager.GetStatTexture(StatType.Weight)
-                )
-            },
-        };
         _body = GetComponent<Rigidbody>();
 
         if (NetworkClient.active) return;
@@ -132,9 +58,10 @@ public class Pickupable : NetworkBehaviour
     public void SetStatType(StatType statType)
     {
         _statType = statType;
-        _stats = _pickupInfo[_statType].playerStats;
+        var pickupStats = ResourceManager.GetPickupInfo(_statType);
+        _stats = pickupStats.playerStats;
         _material = GetComponent<MeshRenderer>().material;
-        _material.mainTexture = _pickupInfo[_statType].texture;
+        _material.mainTexture = pickupStats.texture;
     }
 
     public void AddForce(Vector3 force)

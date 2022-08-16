@@ -90,9 +90,9 @@ public class PlayerController : NetworkBehaviour {
     public float GetStatMultiplierValue(int stat, int overDefault, int underDefault) {
         int defaultValue = 2;
         float multiplier = 1f;
-        if (_data.Stats.Weight > defaultValue)
+        if (stat > defaultValue)
             multiplier = (float)(overDefault - defaultValue + stat) / (float)overDefault;
-        else if (_data.Stats.Weight < defaultValue)
+        else if (stat < defaultValue)
             multiplier = (float)(underDefault - defaultValue + stat) / (float)underDefault;
         return multiplier;
     }

@@ -50,7 +50,6 @@ public class PlayerFactory : MonoBehaviour {
         }
 
         GameObject go = Instantiate(playerPrefab, spawnPosition, spawnRotation, this.transform);
-        go.transform.position = Vector3.up;
         Player player = go.GetComponent<Player>();
 
         if (!NetworkClient.active) {

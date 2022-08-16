@@ -2,24 +2,10 @@
 using static PlayerController;
 
 public class PlayerAirBorneState : PlayerState {
-    private Timer _airBorneTimer;
     private Timer _groundedCooldownTimer = new Timer(0.2f);
     private float airVerticalReductionAngle;
 
     public PlayerAirBorneState(PlayerController controller, PlayerData data) {
-        InitializeAirborneTimer(controller, data);
-
-        data.OnStatUpdate += () => {
-            float time = _airBorneTimer.Time;
-            InitializeAirborneTimer(controller, data);
-            _airBorneTimer += time;
-        };
-    }
-
-    private void InitializeAirborneTimer(PlayerController controller, PlayerData data) {
-        _airBorneTimer = new Timer(
-            data.maxAirTime * controller.GlideMultiplier + data.Stats.Glide / 2
-        );
     }
 
     public override void OnEnter(PlayerController controller) {
@@ -35,7 +21,6 @@ public class PlayerAirBorneState : PlayerState {
     }
 
     public override void OnExit(PlayerController controller) {
-        _airBorneTimer.Reset();
         _groundedCooldownTimer.Reset();
     }
 
@@ -55,15 +40,7 @@ public class PlayerAirBorneState : PlayerState {
         controller.velocityDirection = controller.vecForward;
 
         // Speed acceleration
-        // TODO: Make acceleration non-linear
-        float reductionMultiplier = 1;
-        if (controller.velocityDirection.y > 0) {
-            reductionMultiplier =
-                data.lookAirMaxRotationalBasedSpeedMultiplier
-                + (1 - data.lookAirMaxRotationalBasedSpeedMultiplier) * (1 - airVerticalReductionAngle); // TODO: Add variable to this
-        }
-
-        float maxSpeed = data.maxForwardAirSpeed * controller.WeightSpeedMultiplier * controller.TopSpeedMultiplier * reductionMultiplier;
+        float maxSpeed = data.maxForwardAirSpeed * controller.WeightSpeedMultiplier * controller.TopSpeedMultiplier;
         var acceleration = time / data.secondsToReachFullAirSpeed * maxSpeed;
         controller.speed += acceleration;
 
@@ -72,18 +49,12 @@ public class PlayerAirBorneState : PlayerState {
         }
 
         Vector3 finalVelocity = controller.velocityDirection.normalized * controller.speed * time;
+        finalVelocity.y = controller.velocityDirection.normalized.y * data.verticalThrust * controller.GlideMultiplier * controller.TopSpeedMultiplier * time;
 
-        finalVelocity += Vector3.up * controller.GlideMultiplier * time;
-        finalVelocity += Vector3.down * controller.WeightGlideMultiplier * time;
-
-        _airBorneTimer += time;
-        if (controller.useGravity && _airBorneTimer.Expired) {
-            controller.gravitySpeed += data.gravityScale;
-
-            // Counteracts upwards velocity
-            if (Mathf.Sign(controller.velocityDirection.normalized.y) == 1)
-                finalVelocity += Vector3.down * finalVelocity.y;
-
+        if (controller.useGravity) {
+            float glideMultiplier = 0.5f * 1 / controller.GlideMultiplier;
+            float weightMultiplier = controller.WeightGlideMultiplier * controller.TopSpeedMultiplier;
+            controller.gravitySpeed += data.gravityScale * weightMultiplier * glideMultiplier * time;
             finalVelocity += Vector3.down * controller.gravitySpeed * time;
         }
 

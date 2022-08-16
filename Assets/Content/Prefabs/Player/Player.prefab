@@ -631,14 +631,14 @@ MonoBehaviour:
     _topSpeed: 0
     _turn: 0
     _weight: 0
-  maxAirTime: 0.75
   maxClimbableSlopeAngle: 80
   secondsToReachFullGroundSpeed: 1
   secondsToReachFullAirSpeed: 0.3
   maxForwardGroundSpeed: 600
   maxForwardAirSpeed: 750
-  gravityScale: 2.5
+  gravityScale: 150
   speedCorrectionFactor: 10
+  verticalThrust: 175
   lookGroundedRotationDegsPerSecond: 50
   lookAirHorizontalRotationDegsPerSecond: 160
   lookAirVerticalRotationDegsPerSecond: 80
@@ -647,7 +647,7 @@ MonoBehaviour:
   rideRotationSpeed: 4
   chargeRotationSpeedExtra: 70
   maxTurnMagnitude: 3
-  maxAirborneAngle: 80
+  maxAirborneAngle: 70
   minAirborneAngle: 55
   followGroundRotationAnglePerSecond: 110
   airRollRotationAnglePerSecond: 360

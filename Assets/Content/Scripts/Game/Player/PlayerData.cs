@@ -17,7 +17,6 @@ public class PlayerData : MonoBehaviour {
         }
     }
 
-    [Min(0)] public float maxAirTime = 0.75f;
     [Min(0)] public float maxClimbableSlopeAngle = 80;
 
     [Header("Velocity")]
@@ -25,8 +24,9 @@ public class PlayerData : MonoBehaviour {
     [Min(0.01f)] public float secondsToReachFullAirSpeed = 0.3f;
     [Min(0f)] public float maxForwardGroundSpeed = 600f;
     [Min(0.01f)] public float maxForwardAirSpeed = 750f;
-    [Min(0f)] public float gravityScale = 2.5f;
+    [Min(0f)] public float gravityScale = 150f;
     [Min(0.01f)] public float speedCorrectionFactor = 10;
+    [Min(0.01f)] public float verticalThrust = 175f;
 
     [Header("Rotation")]
     [Min(0f)] public float lookGroundedRotationDegsPerSecond = 50;
@@ -38,7 +38,7 @@ public class PlayerData : MonoBehaviour {
     [Min(0)] public float chargeRotationSpeedExtra = 70;
     [Min(0.01f)] public float maxTurnMagnitude = 3;
     //[Min(0)] public float _airRotationSpeed = 50f; // TODO
-    [Range(0f, 80f)] public float maxAirborneAngle = 80;
+    [Range(0f, 80f)] public float maxAirborneAngle = 70;
     [Range(0f, 80f)] public float minAirborneAngle = 55;
     [Min(0)] public float followGroundRotationAnglePerSecond = 110f;
     [Min(0)] public float airRollRotationAnglePerSecond = 360f;
